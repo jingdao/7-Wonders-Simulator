@@ -1,0 +1,7 @@
+images
+bin
+src/controller/*
+src/model/*
+**/*.swp
+!src/controller/*.java
+!src/model/*.java
