@@ -1,5 +1,7 @@
 package model;
 
+import java.util.HashMap;
+
 public class Cards {
 	
 	public String name;
@@ -47,7 +49,7 @@ public class Cards {
 	public static Cards Statue = new Cards("STATUE",0,1,0,1,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,5,"THEATER");
 	public static Cards Courthouse = new Cards("COURTHOUSE",2,0,0,0,0,1,0,0,CardType.BLUE,ResourceType.VICTORY,5,"SCRIPTORIUM");
 	public static Cards Forum = new Cards("FORUM",2,0,0,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"TRADING POST");
-	public static Cards Caravansery = new Cards("CARAVANSERY",0,0,0,2,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"MARKET PLACE");
+	public static Cards Caravansery = new Cards("CARAVANSERY",0,0,0,2,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"MARKETPLACE");
 	public static Cards Vineyard = new Cards("VINEYARD",0,0,0,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,null);
 	public static Cards Bazar = new Cards("BAZAR",0,0,0,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,null);
 	public static Cards Walls = new Cards("WALLS",0,0,3,0,0,0,0,0,CardType.RED,ResourceType.SHIELD,2,null);
@@ -111,7 +113,51 @@ public class Cards {
 	public static Cards[] age3group6={Pantheon,Townhall,Lighthouse,Chamberofcommerce,Circus,Lodge};
 	public static Cards[] age3group7={Palace,Arena,Fortifications,Arsenal,Observatory,Academy};
 	public static Cards[] age3guilds={Workersguild,Craftsmensguild,Tradersguild,Philosophersguild,Spyguild,Strategyguild,Shipownersguild,Scientistsguild,Magistratesguild,Buildersguild};
+
+	public static HashMap<String,String[]> dependencyMap;
 	
+	public static void buildDependencyMap() {
+		dependencyMap = new HashMap<String,String[]>();
+		String[] s1 = {"COURTHOUSE","LIBRARY"};
+		dependencyMap.put("SCRIPTORIUM",s1);
+		String[] s2 = {"AQUEDUCT"};
+		dependencyMap.put("BATHS",s2);
+		String[] s3 = {"TEMPLE"};
+		dependencyMap.put("ALTAR",s3);
+		String[] s4 = {"STATUE"};
+		dependencyMap.put("THEATER",s4);
+		String[] s5 = {"PANTHEON"};
+		dependencyMap.put("TEMPLE",s5);
+		String[] s6 = {"GARDENS"};
+		dependencyMap.put("STATUE",s6);
+		String[] s7 = {"BATHS"};
+		dependencyMap.put("AQUEDUCT",s7);
+		String[] s8 = {"FORUM"};
+		dependencyMap.put("WEST TRADING POST",s8);
+		String[] s9 = {"FORUM"};
+		dependencyMap.put("EAST TRADING POST",s9);
+		String[] s10 = {"HAVEN"};
+		dependencyMap.put("FORUM",s10);
+		String[] s11 = {"CARAVANSERY"};
+		dependencyMap.put("MARKETPLACE",s11);
+		String[] s12 = {"FORTIFICATIONS"};
+		dependencyMap.put("WALLS",s12);
+		String[] s13 = {"CIRCUS"};
+		dependencyMap.put("TRAINING GROUND",s13);
+		String[] s14 = {"STABLES","DISPENSARY"};
+		dependencyMap.put("APOTHECARY",s14);
+		String[] s15 = {"ARENA","LODGE"};
+		dependencyMap.put("DISPENSARY",s15);
+		String[] s16 = {"ARCHERY RANGE","LABORATORY"};
+		dependencyMap.put("WORKSHOP",s16);
+		String[] s17 = {"SIEGE WORKSHOP","OBSERVATORY"};
+		dependencyMap.put("LABORATORY",s17);
+		String[] s18 = {"SENATE","UNIVERSITY"};
+		dependencyMap.put("LIBRARY",s18);
+		String[] s19 = {"ACADEMY","STUDY"};
+		dependencyMap.put("SCHOOL",s19);
+	}
+
 	public Cards(String name,int costClay,int costOre,int costStone,int costWood,int costGlass,int costLoom,int costPapyrus,int costCoin,CardType type,ResourceType rtype,int resourceValue,String dependency) {
 		this.name=name;
 		this.costClay=costClay;
@@ -142,6 +188,7 @@ public class Cards {
 		s+="\nProvides: ";
 		if (rtype==ResourceType.COIN) s+=resourceValue+" COIN";
 		else if (rtype==ResourceType.VICTORY) s+=resourceValue+" VICTORY";
+		else if (rtype==ResourceType.SHIELD) s+=resourceValue+" SHIELD";
 		else if (rtype==ResourceType.WOOD) s+=resourceValue+" WOOD";
 		else if (rtype==ResourceType.CLAY) s+=resourceValue+" CLAY";
 		else if (rtype==ResourceType.ORE) s+=resourceValue+" ORE";
@@ -149,10 +196,30 @@ public class Cards {
 		else if (rtype==ResourceType.GLASS) s+="GLASS";
 		else if (rtype==ResourceType.LOOM) s+="LOOM";
 		else if (rtype==ResourceType.PAPYRUS) s+="PAPYRUS";
+		else if (rtype==ResourceType.CLAYORE) s+="CLAY/ORE";
+		else if (rtype==ResourceType.CLAYSTONE) s+="CLAY/STONE";
+		else if (rtype==ResourceType.CLAYWOOD) s+="CLAY/WOOD";
+		else if (rtype==ResourceType.ORESTONE) s+="ORE/STONE";
+		else if (rtype==ResourceType.OREWOOD) s+="ORE/WOOD";
+		else if (rtype==ResourceType.STONEWOOD) s+="STONE/WOOD";
 		else if (rtype==ResourceType.SCIENCE) {
 			if (resourceValue==ScienceType.GEAR.ordinal()) s+="GEAR";
 			else if (resourceValue==ScienceType.COMPASS.ordinal()) s+="COMPASS";
 			else if (resourceValue==ScienceType.TABLET.ordinal()) s+="TABLET";
+		} else if (name=="MARKETPLACE") s+="1 COIN for GLASS/LOOM/PAPYRUS";
+		else if (name=="WEST TRADING POST") s+="1 COIN for CLAY/ORE/STONE/WOOD (left)";
+		else if (name=="EAST TRADING POST") s+="1 COIN for CLAY/ORE/STONE/WOOD (right)";
+		else if (name=="CARAVANSERY") s+="CLAY/ORE/STONE/WOOD";
+		else if (name=="FORUM") s+="GLASS/LOOM/PAPYRUS";
+		else if (name=="VINEYARD") s+="1 COIN/BROWN CARD";
+		else if (name=="BAZAR") s+="2 COIN/GRAY CARD";
+		else if (name=="HAVEN") s+="1 COIN 1 VICTORY/BROWN CARD";
+		else if (name=="LIGHTHOUSE") s+="1 COIN 1 VICTORY/YELLOW CARD";
+		else if (name=="CHAMBER OF COMMERCE") s+="2 COIN 2 VICTORY/GRAY CARD";
+		else if (name=="ARENA") s+="3 COIN 1 VICTORY/WONDER STAGE";
+		if (dependencyMap.containsKey(name)) {
+			s+="\nUpgrades to: ";
+			for (String ss:dependencyMap.get(name)) s+=ss+",";
 		}
 		return s;
 	}

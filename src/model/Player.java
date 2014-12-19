@@ -5,12 +5,15 @@ import java.io.Console;
 
 public class Player {
 
+	public Player left,right;
 	public int id,numClay,numOre,numStone,numWood,numGlass,numLoom,numPapyrus;
 	public int numCoin,numShield,numWonderStages;
 	public int numCompass,numGear,numTablet;
 	public int victoryToken,defeatToken;
+	public Cards lastCard;
+	public PlayerAction action;
 	Wonder wonder;
-	ArrayList<Cards> playedCards;
+	public ArrayList<Cards> playedCards;
 	boolean[] playable;
 	boolean isWonderBSide;
 
@@ -43,9 +46,9 @@ public class Player {
 		}
 	}
 
-	public PlayerAction getAction(ArrayList<Cards> cards) {
+	public void getAction(ArrayList<Cards> cards) {
 		checkResources(cards);
-		PlayerAction action = PlayerAction.CARD;
+		action = PlayerAction.CARD;
 		int cardPlayed = -1;
 		if (id==0) {
 			int i=0;
@@ -108,12 +111,11 @@ public class Player {
 			if (cardPlayed==-1) {action=PlayerAction.COIN; cardPlayed=0;}
 		};
 
-		Cards c = cards.remove(cardPlayed);
+		lastCard = cards.remove(cardPlayed);
 		if (action==PlayerAction.CARD) {
-			playedCards.add(c);
-			numCoin-=c.costCoin;
-			applyCardEffect(c);
-			System.out.println("Player "+id+" played "+c.name);
+//			playedCards.add(c);
+			numCoin-=lastCard.costCoin;
+			applyCardEffect(lastCard);
 		} else if (action==PlayerAction.WONDER) {
 			numWonderStages++;
 			System.out.println("Player "+id+" built wonder stage "+numWonderStages);
@@ -121,13 +123,21 @@ public class Player {
 			numCoin+=3;
 			System.out.println("Player "+id+" discarded a card for 3 coin");
 		}
-		return action; 
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
 		playable=new boolean[cards.size()];
 		for (int i=0;i<cards.size();i++) {
 			if (playedCards.contains(cards.get(i))) continue;
+			if (cards.get(i).dependency!=null) {
+				for (Cards c:playedCards) {
+					if (c.name.endsWith(cards.get(i).dependency)) {
+						playable[i]=true;
+						break;
+					}
+				}
+				if (playable[i]) continue;
+			}
 			if (cards.get(i).costCoin>numCoin) continue;
 			if (cards.get(i).costClay>numClay) continue;
 			if (cards.get(i).costOre>numOre) continue;
@@ -164,6 +174,34 @@ public class Player {
 	}
 
 	public void applyCardEffect(Cards c) {
+		if (c.name=="VINEYARD"||c.name=="HAVEN") {
+			int count=0;
+			for (Cards cc:playedCards) if (cc.type==CardType.BROWN) count++;
+			for (Cards cc:left.playedCards) if (cc.type==CardType.BROWN) count++;
+			for (Cards cc:right.playedCards) if (cc.type==CardType.BROWN) count++;
+			numCoin+=count;
+			System.out.println("Player "+id+" played "+c.name+" for "+count+" coin");
+			return;
+		} else if (c.name=="BAZAR"||c.name=="CHAMBER OF COMMERCE") {
+			int count=0;
+			for (Cards cc:playedCards) if (cc.type==CardType.GRAY) count++;
+			for (Cards cc:left.playedCards) if (cc.type==CardType.GRAY) count++;
+			for (Cards cc:right.playedCards) if (cc.type==CardType.GRAY) count++;
+			numCoin+=count*2;
+			System.out.println("Player "+id+" played "+c.name+" for "+(count*2)+" coin");
+			return;
+		} else if (c.name=="LIGHTHOUSE") {
+			int count=0;
+			for (Cards cc:playedCards) if (cc.type==CardType.YELLOW) count++;
+			for (Cards cc:left.playedCards) if (cc.type==CardType.YELLOW) count++;
+			for (Cards cc:right.playedCards) if (cc.type==CardType.YELLOW) count++;
+			numCoin+=count;
+			System.out.println("Player "+id+" played "+c.name+" for "+count+" coin");
+			return;
+		} else if (c.name=="ARENA") {
+			numCoin+=numWonderStages*3;
+			System.out.println("Player "+id+" played "+c.name+" for "+(numWonderStages*3)+" coin");
+		}
 		if (c.rtype==ResourceType.COIN) numCoin+=c.resourceValue;
 		else if (c.rtype==ResourceType.WOOD) numWood+=c.resourceValue;
 		else if (c.rtype==ResourceType.CLAY) numClay+=c.resourceValue;
@@ -178,5 +216,6 @@ public class Player {
 			else if (c.resourceValue==ScienceType.TABLET.ordinal()) numTablet++;
 			else if (c.resourceValue==ScienceType.COMPASS.ordinal()) numCompass++;
 		}
+		System.out.println("Player "+id+" played "+c.name);
 	}
 }

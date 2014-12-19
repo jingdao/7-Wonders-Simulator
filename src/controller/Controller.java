@@ -3,6 +3,7 @@ package controller;
 import model.Cards;
 import model.Wonder;
 import model.Player;
+import model.PlayerAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -13,12 +14,20 @@ public class Controller {
 
 	public Controller() {
 		random = new Random();
+		Cards.buildDependencyMap();
 		int numPlayers=7;
+		newGame(numPlayers);
+	}
+
+	public void newGame(int numPlayers) {
 		Wonder[] w = new Wonder[numPlayers];
 		Cards[][] c=new Cards[numPlayers][7];
 		Player[] p = new Player[numPlayers];
+		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
 		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i]);
+		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
+		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
 		for (int age=1;age<=3;age++) {
 			System.out.println("Age "+age);
 			shuffleCards(c,age);
@@ -34,7 +43,15 @@ public class Controller {
 					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers]);
 					else p[k].getAction(cc[(k+j)%numPlayers]);
 				}
+				for (Player pp:p) {
+					if (pp.action==PlayerAction.CARD) pp.playedCards.add(pp.lastCard);
+					else if (pp.action==PlayerAction.COIN) discardPile.add(pp.lastCard);
+				}
 			}
+			for (int k=0;k<numPlayers;k++) discardPile.add(cc[k].get(0));
+			System.out.print("Discard pile: ");
+			for (Cards d:discardPile) System.out.print(d.name+",");
+			System.out.println();
 			int[] warResult = new int[numPlayers];
 			for (int j=0;j<numPlayers-1;j++) {
 				if (p[j].numShield>p[j+1].numShield) {
