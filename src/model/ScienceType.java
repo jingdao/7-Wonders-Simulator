@@ -1,6 +1,6 @@
 package model;
 
 public enum ScienceType {
-	GEAR,TABLET,COMPASS,
+	GEAR,COMPASS,TABLET,
 	NUMTYPES
 }

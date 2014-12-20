@@ -2,7 +2,7 @@ package model;
 
 public class WonderStage {
 	public int costClay,costOre,costStone,costWood,costGlass,costLoom,costPapyrus;
-	public int numCoin,numSheild,numVictory;
+	public int numCoin,numShield,numVictory;
 	public SpecialResource special;
 
 	public static WonderStage rhodesA1=new WonderStage(0,0,0,2,0,0,0,0,0,3,SpecialResource.NONE);
@@ -63,7 +63,7 @@ public class WonderStage {
 	public static WonderStage[] halikarnassosB={halikarnassosB1,halikarnassosB2,halikarnassosB3};
 	public static WonderStage[] gizahB={gizahB1,gizahB2,gizahB3,gizahB4};
 
-	public WonderStage(int costClay,int costOre,int costStone,int costWood,int costGlass,int costLoom,int costPapyrus,int numCoin,int numSheild,int numVictory,SpecialResource special) {
+	public WonderStage(int costClay,int costOre,int costStone,int costWood,int costGlass,int costLoom,int costPapyrus,int numCoin,int numShield,int numVictory,SpecialResource special) {
 		this.costClay=costClay;
 		this.costOre=costOre;
 		this.costStone=costStone;
@@ -72,7 +72,7 @@ public class WonderStage {
 		this.costLoom=costLoom;
 		this.costPapyrus=costPapyrus;
 		this.numCoin=numCoin;
-		this.numSheild=numSheild;
+		this.numShield=numShield;
 		this.numVictory=numVictory;
 		this.special=special;
 	}

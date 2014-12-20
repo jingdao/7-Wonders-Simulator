@@ -68,7 +68,7 @@ public class Cards {
 	public static Cards Senate = new Cards("SENATE",0,1,1,2,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,6,"LIBRARY");
 	public static Cards Haven = new Cards("HAVEN",0,1,0,1,0,1,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"FORUM");
 	public static Cards Lighthouse = new Cards("LIGHTHOUSE",0,0,1,0,1,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"CARAVANSERY");
-	public static Cards Chamberofcommerce = new Cards("CHAMBER OF COMMERCE",2,0,0,0,0,0,0,1,CardType.YELLOW,ResourceType.COMMERCE,0,null);
+	public static Cards Chamberofcommerce = new Cards("CHAMBER OF COMMERCE",2,0,0,0,0,0,1,0,CardType.YELLOW,ResourceType.COMMERCE,0,null);
 	public static Cards Arena = new Cards("ARENA",0,1,2,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"DISPENSARY");
 	public static Cards Fortifications = new Cards("FORTIFICATIONS",0,3,1,0,0,0,0,0,CardType.RED,ResourceType.SHIELD,3,"WALLS");
 	public static Cards Circus = new Cards("CIRCUS",0,1,3,0,0,0,0,0,CardType.RED,ResourceType.SHIELD,3,"TRAINING GROUNDS");
