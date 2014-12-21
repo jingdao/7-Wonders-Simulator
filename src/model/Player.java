@@ -11,6 +11,9 @@ public class Player {
 	public int numCoin,numShield,numWonderStages;
 	public int numGear,numCompass,numTablet;
 	public int victoryToken,defeatToken;
+	public int numBrown,numGray,numYellow,numBlue,numGreen,numRed,numPurple;
+	public int numRawMaterials,numManufacturedGoods;
+	public int numDualResource,numDualClay,numDualOre,numDualStone,numDualWood;
 	public Cards lastCard;
 	public PlayerAction action;
 	public Wonder wonder;
@@ -65,15 +68,24 @@ public class Player {
 				try { 
 					action = PlayerAction.values()[Integer.parseInt(System.console().readLine())];
 					if (action==PlayerAction.WONDER) { 
-						if (checkWonder(debugLog)) break;
+						if (checkWonder(true)) break;
 					} else if (action==PlayerAction.CARD||action==PlayerAction.COIN) {
 						break;
 					} else if (action==PlayerAction.NUMTYPES) {
 						while (true) {
-							System.out.print("Look at (0:cardsPlayed 1-"+cards.size()+":hand)>>>");
+							System.out.print("Look at (-1:neighbors 0:cardsPlayed 1-"+cards.size()+":hand)>>>");
 							try { 
 								int subAction = Integer.parseInt(System.console().readLine());
-								if (subAction==0) {
+								if (subAction==-1) {
+									System.out.println("Left");
+									System.out.println("Resources: "+left.numClay+","+left.numOre+","+left.numStone+","+left.numWood+","+left.numGlass+","+left.numLoom+","+left.numPapyrus);
+									for (Cards c:left.playedCards) System.out.print(c.name+",");
+									System.out.println("\nRight");
+									System.out.println("Resources: "+right.numClay+","+right.numOre+","+right.numStone+","+right.numWood+","+right.numGlass+","+right.numLoom+","+right.numPapyrus);
+									for (Cards c:right.playedCards) System.out.print(c.name+",");
+									System.out.println();
+									break;
+								} else if (subAction==0) {
 									for (Cards c:playedCards) System.out.print(c.name+",");
 									System.out.println();
 									break;
@@ -111,7 +123,7 @@ public class Player {
 			}
 			if (cardPlayed==-1) {
 				cardPlayed=0;
-				if (checkWonder(debugLog)) action=PlayerAction.WONDER;
+				if (checkWonder(false)) action=PlayerAction.WONDER;
 				else action=PlayerAction.COIN;
 			}
 		};
@@ -135,6 +147,8 @@ public class Player {
 				numShield+=wonderSide[numWonderStages-1].numShield;
 				if (debugLog) System.out.print("+"+wonderSide[numWonderStages-1].numShield+" SHIELD ");
 			}
+			if (wonderSide[numWonderStages-1].special==SpecialResource.RAW_MATERIALS) numRawMaterials++;
+			else if (wonderSide[numWonderStages-1].special==SpecialResource.MANUFACTURED_GOODS) numManufacturedGoods++;
 			if (debugLog) System.out.println();
 		} else if (action==PlayerAction.COIN) {
 			numCoin+=3;
@@ -156,13 +170,19 @@ public class Player {
 				if (playable[i]) continue;
 			}
 			if (cards.get(i).costCoin>numCoin) continue;
-			if (cards.get(i).costClay>numClay) continue;
-			if (cards.get(i).costOre>numOre) continue;
-			if (cards.get(i).costStone>numStone) continue;
-			if (cards.get(i).costWood>numWood) continue;
-			if (cards.get(i).costGlass>numGlass) continue;
-			if (cards.get(i).costLoom>numLoom) continue;
-			if (cards.get(i).costPapyrus>numPapyrus) continue;
+			int needClay=cards.get(i).costClay, needOre=cards.get(i).costOre,
+				needStone=cards.get(i).costStone, needWood=cards.get(i).costWood,
+				needGlass=cards.get(i).costGlass, needLoom=cards.get(i).costLoom, needPapyrus=cards.get(i).costPapyrus;
+			needClay=Math.max(0,needClay-numClay);
+			needOre=Math.max(0,needOre-numOre);
+			needStone=Math.max(0,needStone-numStone);
+			needWood=Math.max(0,needWood-numWood);
+			needGlass=Math.max(0,needGlass-numGlass);
+			needLoom=Math.max(0,needLoom-numLoom);
+			needPapyrus=Math.max(0,needPapyrus-numPapyrus);
+//			if (id==0) System.out.println(needClay+","+needOre+","+needStone+","+needWood+","+needGlass+","+needLoom+","+needPapyrus);
+			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
+			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
 			playable[i]=true;
 		}
 	}
@@ -229,7 +249,8 @@ public class Player {
 			numCoin+=numWonderStages*3;
 			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+(numWonderStages*3)+" coin");
 			return;
-		}
+		} else if (c.name=="CARAVANSERY") numRawMaterials++;
+		else if (c.name=="FORUM") numManufacturedGoods++;
 		if (c.rtype==ResourceType.COIN) numCoin+=c.resourceValue;
 		else if (c.rtype==ResourceType.WOOD) numWood+=c.resourceValue;
 		else if (c.rtype==ResourceType.CLAY) numClay+=c.resourceValue;
@@ -245,5 +266,17 @@ public class Player {
 			else if (c.resourceValue==ScienceType.COMPASS.ordinal()) numCompass++;
 		}
 		if (debugLog) System.out.println("Player "+id+" played "+c.name);
+	}
+
+	public void countCards() {
+		for (Cards c:playedCards) {
+			if (c.type==CardType.BROWN) numBrown++;
+			else if (c.type==CardType.GRAY) numGray++;
+			else if (c.type==CardType.YELLOW) numYellow++;
+			else if (c.type==CardType.BLUE) numBlue++;
+			else if (c.type==CardType.GREEN) numGreen++;
+			else if (c.type==CardType.RED) numRed++;
+			else  numPurple++;
+		}
 	}
 }

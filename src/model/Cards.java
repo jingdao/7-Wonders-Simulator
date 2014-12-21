@@ -217,6 +217,16 @@ public class Cards {
 		else if (name=="LIGHTHOUSE") s+="1 COIN 1 VICTORY/YELLOW CARD";
 		else if (name=="CHAMBER OF COMMERCE") s+="2 COIN 2 VICTORY/GRAY CARD";
 		else if (name=="ARENA") s+="3 COIN 1 VICTORY/WONDER STAGE";
+		else if (name=="WORKERS GUILD") s+="1 VICTORY/BROWN CARD";
+		else if (name=="CRAFTSMENS GUILD") s+="2 VICTORY/GRAY CARD";
+		else if (name=="TRADERS GUILD") s+="1 VICTORY/YELLOW CARD";
+		else if (name=="PHILOSOPHERS GUILD") s+="1 VICTORY/GREEN CARD";
+		else if (name=="SPY GUILD") s+="1 VICTORY/RED CARD";
+		else if (name=="STRATEGY GUILD") s+="1 VICTORY/DEFEAT TOKEN";
+		else if (name=="SHIPOWNERS GUILD") s+="1 VICTORY/BROWN GRAY BLUE CARD";
+		else if (name=="SCIENTISTS GUILD") s+="GEAR/TABLET/PAPYRUS";
+		else if (name=="MAGISTRATES GUILD") s+="1 VICTORY/BLUE CARD";
+		else if (name=="BUILDERS GUILD") s+="1 VICTORY/WONDER";
 		if (dependencyMap.containsKey(name)) {
 			s+="\nUpgrades to: ";
 			for (String ss:dependencyMap.get(name)) s+=ss+",";

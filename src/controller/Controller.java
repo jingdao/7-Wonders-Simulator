@@ -13,7 +13,7 @@ import java.util.Random;
 public class Controller {
 
 	public Random random;
-	public static boolean debugLog=false;
+	public static boolean debugLog=true;
 
 	public Controller() {
 		random = new Random();
@@ -28,6 +28,7 @@ public class Controller {
 		Player[] p = new Player[numPlayers];
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
+		w[0]=Wonder.Alexandria;
 		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i]);
 		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
 		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
@@ -52,9 +53,9 @@ public class Controller {
 				}
 			}
 			for (int k=0;k<numPlayers;k++) discardPile.add(cc[k].get(0));
-//			System.out.print("Discard pile: ");
-//			for (Cards d:discardPile) System.out.print(d.name+",");
-//			System.out.println();
+			System.out.print("Discard pile: ");
+			for (Cards d:discardPile) System.out.print(d.name+",");
+			System.out.println();
 			int[] warResult = new int[numPlayers];
 			for (int j=0;j<numPlayers-1;j++) {
 				if (p[j].numShield>p[j+1].numShield) {
@@ -89,8 +90,8 @@ public class Controller {
 		wonders.addAll(Arrays.asList(Wonder.wonders));
 		for (int i=0;i<numPlayers;i++) {
 			int j=random.nextInt(wonders.size());
-//			w[i]=wonders.remove(j);
-			w[i]=wonders.remove(0);
+			w[i]=wonders.remove(j);
+//			w[i]=wonders.remove(0);
 			if (debugLog) System.out.println(w[i].name);
 		}
 
@@ -137,9 +138,14 @@ public class Controller {
 	}
 
 	public void countScore(Player[] p) {
-		System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
 		int highScore=0;
 		int winner=0;
+		System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE");
+		for (Player pp:p) {
+			pp.countCards();
+			System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple);
+		}
+		System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
 		for (int i=0;i<p.length;i++) {
 			int militaryScore=0,coinScore=0,wonderScore=0,civilianScore=0,scienceScore=0,commercialScore=0,guildScore=0,totalScore;
 			militaryScore=p[i].victoryToken-p[i].defeatToken;
@@ -151,12 +157,31 @@ public class Controller {
 			for (Cards c:p[i].playedCards) {
 				if (c.type==CardType.BLUE) civilianScore+=c.resourceValue;
 				else if (c.name=="HAVEN") {
-					for (Cards cc:p[i].playedCards) if (cc.type==CardType.BROWN) commercialScore++;
+					commercialScore+=p[i].numBrown;
 				} else if (c.name=="LIGHTHOUSE") {
-					for (Cards cc:p[i].playedCards) if (cc.type==CardType.YELLOW) commercialScore++;
+					commercialScore+=p[i].numYellow;
 				} else if (c.name=="CHAMBER OF COMMERCE") {
-					for (Cards cc:p[i].playedCards) if (cc.type==CardType.GRAY) commercialScore+=2;
+					commercialScore+=p[i].numGray*2;
 				} else if (c.name=="ARENA") commercialScore+=p[i].numWonderStages;
+				else if (c.name=="WORKERS GUILD") {
+					guildScore+=p[i].left.numBrown+p[i].right.numBrown;
+				} else if (c.name=="CRAFTSMENS GUILD") {
+					guildScore+=p[i].left.numGray+p[i].right.numGray;
+				} else if (c.name=="TRADERS GUILD") {
+					guildScore+=p[i].left.numYellow+p[i].right.numYellow;
+				} else if (c.name=="PHILOSOPHERS GUILD") {
+					guildScore+=p[i].left.numGreen+p[i].right.numGreen;
+				} else if (c.name=="SPY GUILD") {
+					guildScore+=p[i].left.numRed+p[i].right.numRed;
+				} else if (c.name=="MAGISTRATES GUILD") {
+					guildScore+=p[i].left.numBlue+p[i].right.numBlue;
+				} else if (c.name=="SHIPOWNERS GUILD") {
+					guildScore+=p[i].numBrown+p[i].numGray+p[i].numBlue;
+				} else if (c.name=="STRATEGY GUILD") {
+					guildScore+=p[i].left.defeatToken+p[i].right.defeatToken;
+				} else if (c.name=="BUILDERS GUILD") {
+					guildScore+=p[i].numWonderStages+p[i].left.numWonderStages+p[i].right.numWonderStages;
+				}
 			}
 			scienceScore=getScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet);
 			totalScore = militaryScore+coinScore+wonderScore+civilianScore+scienceScore+commercialScore+guildScore;
