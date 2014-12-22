@@ -3,6 +3,7 @@ package model;
 import java.util.ArrayList;
 import java.io.Console;
 import controller.Controller;
+import java.util.HashMap;
 
 public class Player {
 
@@ -18,7 +19,10 @@ public class Player {
 	public PlayerAction action;
 	public Wonder wonder;
 	public ArrayList<Cards> playedCards;
+	public HashMap<Integer,Integer[]> resourceMap = new HashMap<Integer,Integer[]>();
+	public String resourceDescription="",commerceDescription="";
 	boolean[] playable;
+	boolean canBuildWonder;
 	public boolean isWonderBSide;
 
 	public Player(int id,Wonder w) {
@@ -52,6 +56,7 @@ public class Player {
 
 	public void getAction(ArrayList<Cards> cards,boolean debugLog) {
 		checkResources(cards);
+		canBuildWonder=checkWonder();
 		action = PlayerAction.CARD;
 		int cardPlayed = -1;
 		if (id==0&&debugLog) {
@@ -63,12 +68,20 @@ public class Player {
 			System.out.println("");
 			System.out.println("Resources: "+numClay+","+numOre+","+numStone+","+numWood+","+numGlass+","+numLoom+","+numPapyrus);
 			System.out.println("           "+numCoin+","+numShield+","+numGear+","+numCompass+","+numTablet+","+numWonderStages);
+			System.out.println(resourceDescription+commerceDescription);
 			while (true) {
 				System.out.print("Choose action (0:card 1:wonder 2:discard 3:look)>>>");
 				try { 
 					action = PlayerAction.values()[Integer.parseInt(System.console().readLine())];
 					if (action==PlayerAction.WONDER) { 
-						if (checkWonder(true)) break;
+						if (canBuildWonder) break;
+						else {
+							WonderStage[] wonderSide;
+							if (isWonderBSide) wonderSide=wonder.stagesB;
+							else wonderSide=wonder.stagesA;
+							if (numWonderStages>=wonderSide.length) System.out.println("You have already constructed all "+wonderSide.length+" stages of your wonder.");
+							else System.out.println("You do not have enough resources to construct your next wonder");
+						}
 					} else if (action==PlayerAction.CARD||action==PlayerAction.COIN) {
 						break;
 					} else if (action==PlayerAction.NUMTYPES) {
@@ -80,10 +93,13 @@ public class Player {
 									System.out.println("Left");
 									System.out.println("Resources: "+left.numClay+","+left.numOre+","+left.numStone+","+left.numWood+","+left.numGlass+","+left.numLoom+","+left.numPapyrus);
 									for (Cards c:left.playedCards) System.out.print(c.name+",");
-									System.out.println("\nRight");
+									System.out.println();
+									System.out.println(left.resourceDescription);
+									System.out.println("Right");
 									System.out.println("Resources: "+right.numClay+","+right.numOre+","+right.numStone+","+right.numWood+","+right.numGlass+","+right.numLoom+","+right.numPapyrus);
 									for (Cards c:right.playedCards) System.out.print(c.name+",");
 									System.out.println();
+									System.out.println(right.resourceDescription);
 									break;
 								} else if (subAction==0) {
 									for (Cards c:playedCards) System.out.print(c.name+",");
@@ -123,7 +139,7 @@ public class Player {
 			}
 			if (cardPlayed==-1) {
 				cardPlayed=0;
-				if (checkWonder(false)) action=PlayerAction.WONDER;
+				if (canBuildWonder) action=PlayerAction.WONDER;
 				else action=PlayerAction.COIN;
 			}
 		};
@@ -137,19 +153,7 @@ public class Player {
 			WonderStage[] wonderSide;
 			if (isWonderBSide) wonderSide=wonder.stagesB;
 			else wonderSide=wonder.stagesA;
-			numWonderStages++;
-			if (debugLog) System.out.print("Player "+id+" built Wonder Stage "+numWonderStages+"      ");
-			if (wonderSide[numWonderStages-1].numCoin>0) {
-				numCoin+=wonderSide[numWonderStages-1].numCoin;
-				if (debugLog) System.out.print("+"+wonderSide[numWonderStages-1].numCoin+" COIN ");
-			}
-			if (wonderSide[numWonderStages-1].numShield>0) {
-				numShield+=wonderSide[numWonderStages-1].numShield;
-				if (debugLog) System.out.print("+"+wonderSide[numWonderStages-1].numShield+" SHIELD ");
-			}
-			if (wonderSide[numWonderStages-1].special==SpecialResource.RAW_MATERIALS) numRawMaterials++;
-			else if (wonderSide[numWonderStages-1].special==SpecialResource.MANUFACTURED_GOODS) numManufacturedGoods++;
-			if (debugLog) System.out.println();
+			applyWonderEffect(wonderSide[numWonderStages],debugLog);
 		} else if (action==PlayerAction.COIN) {
 			numCoin+=3;
 			if (debugLog) System.out.println("Player "+id+" discarded a card for 3 coin");
@@ -181,33 +185,32 @@ public class Player {
 			needLoom=Math.max(0,needLoom-numLoom);
 			needPapyrus=Math.max(0,needPapyrus-numPapyrus);
 //			if (id==0) System.out.println(needClay+","+needOre+","+needStone+","+needWood+","+needGlass+","+needLoom+","+needPapyrus);
-			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
-			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
-			playable[i]=true;
+//			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
+//			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
+			int k=needClay+needOre*5+needStone*25+needWood*125+needGlass*625+needLoom*3125+needPapyrus*15625;
+			if (k==0||resourceMap.containsKey(k))
+				playable[i]=true;
 		}
 	}
 
-	public boolean checkWonder(boolean debugLog) {
+	public boolean checkWonder() {
 		WonderStage[] wonderSide;
 		if (isWonderBSide) wonderSide=wonder.stagesB;
 		else wonderSide=wonder.stagesA;
-		if (numWonderStages>=wonderSide.length) {
-			if (debugLog) System.out.println("You have already constructed all "+wonderSide.length+" stages of your wonder.");
-			return false;
-		}
-		boolean enoughResources=true;
-		if (wonderSide[numWonderStages].costClay>numClay) enoughResources=false;
-		if (wonderSide[numWonderStages].costOre>numOre) enoughResources=false;
-		if (wonderSide[numWonderStages].costStone>numStone) enoughResources=false;
-		if (wonderSide[numWonderStages].costWood>numWood) enoughResources=false;
-		if (wonderSide[numWonderStages].costGlass>numGlass) enoughResources=false;
-		if (wonderSide[numWonderStages].costLoom>numLoom) enoughResources=false;
-		if (wonderSide[numWonderStages].costPapyrus>numPapyrus) enoughResources=false;
-		if (!enoughResources) {
-			if (debugLog) System.out.println("You do not have enough resources to construct your next wonder.");
-			return false;
-		}
-		return true;
+		if (numWonderStages>=wonderSide.length) return false;
+		int needClay=wonderSide[numWonderStages].costClay, needOre=wonderSide[numWonderStages].costOre,
+			needStone=wonderSide[numWonderStages].costStone, needWood=wonderSide[numWonderStages].costWood,
+			needGlass=wonderSide[numWonderStages].costGlass, needLoom=wonderSide[numWonderStages].costLoom, needPapyrus=wonderSide[numWonderStages].costPapyrus;
+		needClay=Math.max(0,needClay-numClay);
+		needOre=Math.max(0,needOre-numOre);
+		needStone=Math.max(0,needStone-numStone);
+		needWood=Math.max(0,needWood-numWood);
+		needGlass=Math.max(0,needGlass-numGlass);
+		needLoom=Math.max(0,needLoom-numLoom);
+		needPapyrus=Math.max(0,needPapyrus-numPapyrus);
+		int k=needClay+needOre*5+needStone*25+needWood*125+needGlass*625+needLoom*3125+needPapyrus*15625;
+		if (k==0||resourceMap.containsKey(k)) return true;
+		else return false;
 	}
 
 	public void applyCardEffect(Cards c,boolean debugLog) {
@@ -249,8 +252,8 @@ public class Player {
 			numCoin+=numWonderStages*3;
 			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+(numWonderStages*3)+" coin");
 			return;
-		} else if (c.name=="CARAVANSERY") numRawMaterials++;
-		else if (c.name=="FORUM") numManufacturedGoods++;
+		} else if (c.name=="CARAVANSERY") {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
+		else if (c.name=="FORUM") {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
 		if (c.rtype==ResourceType.COIN) numCoin+=c.resourceValue;
 		else if (c.rtype==ResourceType.WOOD) numWood+=c.resourceValue;
 		else if (c.rtype==ResourceType.CLAY) numClay+=c.resourceValue;
@@ -259,6 +262,12 @@ public class Player {
 		else if (c.rtype==ResourceType.LOOM) numLoom+=c.resourceValue;
 		else if (c.rtype==ResourceType.GLASS) numGlass+=c.resourceValue;
 		else if (c.rtype==ResourceType.PAPYRUS) numPapyrus+=c.resourceValue;
+		else if (c.rtype==ResourceType.CLAYORE) {int[] r={1,5};addDualResource(r);resourceDescription+="CLAY/ORE,";}
+		else if (c.rtype==ResourceType.CLAYSTONE) {int[] r={1,25};addDualResource(r);resourceDescription+="CLAY/STONE,";}
+		else if (c.rtype==ResourceType.CLAYWOOD) {int[] r={1,125};addDualResource(r);resourceDescription+="CLAY/WOOD,";}
+		else if (c.rtype==ResourceType.ORESTONE) {int[] r={5,25};addDualResource(r);resourceDescription+="ORE/STONE,";}
+		else if (c.rtype==ResourceType.OREWOOD) {int[] r={5,125};addDualResource(r);resourceDescription+="ORE/WOOD,";}
+		else if (c.rtype==ResourceType.STONEWOOD) {int[] r={25,125};addDualResource(r);resourceDescription+="STONE/WOOD,";}
 		else if (c.rtype==ResourceType.SHIELD) numShield+=c.resourceValue;
 		else if (c.rtype==ResourceType.SCIENCE) {
 			if (c.resourceValue==ScienceType.GEAR.ordinal()) numGear++;
@@ -266,6 +275,35 @@ public class Player {
 			else if (c.resourceValue==ScienceType.COMPASS.ordinal()) numCompass++;
 		}
 		if (debugLog) System.out.println("Player "+id+" played "+c.name);
+	}
+
+	public void applyWonderEffect(WonderStage w,boolean debugLog) {
+		numWonderStages++;
+		if (debugLog) System.out.print("Player "+id+" built Wonder Stage "+numWonderStages+"      ");
+		if (w.numCoin>0) {
+			numCoin+=w.numCoin;
+			if (debugLog) System.out.print("+"+w.numCoin+" COIN ");
+		}
+		if (w.numShield>0) {
+			numShield+=w.numShield;
+			if (debugLog) System.out.print("+"+w.numShield+" SHIELD ");
+		}
+		if (w.special==SpecialResource.RAW_MATERIALS) {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
+		else if (w.special==SpecialResource.MANUFACTURED_GOODS) {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
+		if (debugLog) System.out.println();
+	}
+
+	public void addDualResource(int[] r) {
+		HashMap<Integer,Integer[]> newResource = new HashMap<Integer,Integer[]>();
+		for (Integer i:resourceMap.keySet()) {
+			for (int j:r) {
+				if (!(i%(j*5)>=j*4)) newResource.put(i+j,null);
+			}
+		}
+		resourceMap.putAll(newResource);
+		for (int i:r) {
+			resourceMap.put(i,null);
+		}
 	}
 
 	public void countCards() {

@@ -13,7 +13,7 @@ import java.util.Random;
 public class Controller {
 
 	public Random random;
-	public static boolean debugLog=true;
+	public static boolean debugLog=false;
 
 	public Controller() {
 		random = new Random();
@@ -140,10 +140,10 @@ public class Controller {
 	public void countScore(Player[] p) {
 		int highScore=0;
 		int winner=0;
-		System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE");
+		System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE | VICTORY DEFEAT");
 		for (Player pp:p) {
 			pp.countCards();
-			System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple);
+			System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d | %7d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
 		System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
 		for (int i=0;i<p.length;i++) {
