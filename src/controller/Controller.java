@@ -6,6 +6,7 @@ import model.Wonder;
 import model.Player;
 import model.PlayerAction;
 import model.WonderStage;
+import model.ResourceType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -13,7 +14,7 @@ import java.util.Random;
 public class Controller {
 
 	public Random random;
-	public static boolean debugLog=false;
+	public static boolean debugLog=true;
 
 	public Controller() {
 		random = new Random();
@@ -28,10 +29,19 @@ public class Controller {
 		Player[] p = new Player[numPlayers];
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
-		w[0]=Wonder.Alexandria;
+		//w[0]=Wonder.Alexandria;
 		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i]);
 		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
 		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
+		for (Player pp:p) {
+			if (pp.wonder.startingResource==ResourceType.CLAY) {int[] r={1};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
+			else if (pp.wonder.startingResource==ResourceType.ORE) {int[] r={5};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
+			else if (pp.wonder.startingResource==ResourceType.STONE) {int[] r={25};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
+			else if (pp.wonder.startingResource==ResourceType.WOOD) {int[] r={125};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
+			else if (pp.wonder.startingResource==ResourceType.GLASS) {int[] r={625};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
+			else if (pp.wonder.startingResource==ResourceType.LOOM) {int[] r={3125};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
+			else if (pp.wonder.startingResource==ResourceType.PAPYRUS) {int[] r={15625};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
+		}
 		for (int age=1;age<=3;age++) {
 			if (debugLog) System.out.println("Age "+age);
 			shuffleCards(c,age);
@@ -48,7 +58,7 @@ public class Controller {
 					else p[k].getAction(cc[(k+j)%numPlayers],debugLog);
 				}
 				for (Player pp:p) {
-					if (pp.action==PlayerAction.CARD) pp.playedCards.add(pp.lastCard);
+					if (pp.action==PlayerAction.CARD) {pp.playedCards.add(pp.lastCard); pp.applyCardEffect(pp.lastCard,debugLog);}
 					else if (pp.action==PlayerAction.COIN) discardPile.add(pp.lastCard);
 				}
 			}

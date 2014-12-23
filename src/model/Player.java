@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.io.Console;
 import controller.Controller;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Player {
 
@@ -13,15 +14,16 @@ public class Player {
 	public int numGear,numCompass,numTablet;
 	public int victoryToken,defeatToken;
 	public int numBrown,numGray,numYellow,numBlue,numGreen,numRed,numPurple;
-	public int numRawMaterials,numManufacturedGoods;
-	public int numDualResource,numDualClay,numDualOre,numDualStone,numDualWood;
+	public int leftTradingCostRaw=2,leftTradingCostManufactured=2,rightTradingCostRaw=2,rightTradingCostManufactured=2;
+	public int leftCost,rightCost;
 	public Cards lastCard;
 	public PlayerAction action;
 	public Wonder wonder;
 	public ArrayList<Cards> playedCards;
-	public HashMap<Integer,Integer[]> resourceMap = new HashMap<Integer,Integer[]>();
+	public HashMap<Integer,ArrayList<NeighborResource>> resourceMap = new HashMap<Integer,ArrayList<NeighborResource>>();
 	public String resourceDescription="",commerceDescription="";
-	boolean[] playable;
+	int[] playableCost;
+	Object[] neighborResourceOptions;
 	boolean canBuildWonder;
 	public boolean isWonderBSide;
 
@@ -62,8 +64,10 @@ public class Player {
 		if (id==0&&debugLog) {
 			int i=0;
 			for(Cards c:cards) {
-				if (playable[i++]) System.out.print(c.name+",");
-				else System.out.print(c.name+"(x),");
+				if (playableCost[i]==0) System.out.print(c.name+",");
+				else if (playableCost[i]<0) System.out.print(c.name+"(x),");
+				else System.out.print(c.name+"("+playableCost[i]+"),");
+				i++;
 			}
 			System.out.println("");
 			System.out.println("Resources: "+numClay+","+numOre+","+numStone+","+numWood+","+numGlass+","+numLoom+","+numPapyrus);
@@ -123,11 +127,38 @@ public class Player {
 					cardPlayed = Integer.parseInt(System.console().readLine())-1;
 					if (cardPlayed>=0&&cardPlayed<cards.size()) {
 						if (action!=PlayerAction.CARD) break;
-						else if (!playable[cardPlayed]) {
+						else if (playableCost[cardPlayed]<0) {
 							if (playedCards.contains(cards.get(cardPlayed))) System.out.println("You cannot build 2 identical structures");
 							else System.out.println("You do not have enough resources");
 						}
-						else break;
+						else if (playableCost[cardPlayed]>0){
+							System.out.print("Choose trading option (");
+							ArrayList<NeighborResource> a = (ArrayList<NeighborResource>)neighborResourceOptions[cardPlayed];
+							HashSet<Integer> h = new HashSet<Integer>();
+							for (int j=0;j<a.size();j++) {
+								NeighborResource n = a.get(j);
+								int lc=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
+								int rc=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+								if (!h.contains(lc*100+rc)) {
+									h.add(lc*100+rc);
+									System.out.print(j+":"+lc+"&"+rc+" ");
+								}
+							}
+							System.out.println(")");
+							while (true) {
+								System.out.print(">>>");
+								try {
+									int tradingOption = Integer.parseInt(System.console().readLine());
+									if (tradingOption>=0&&tradingOption<a.size()) {
+										NeighborResource n = a.get(tradingOption);
+										leftCost=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
+										rightCost=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+										break;
+									}
+								} catch (NumberFormatException e) {}
+							}
+							break;
+						} else break;
 					}			
 				}
 				catch (NumberFormatException e) {}
@@ -135,7 +166,7 @@ public class Player {
 
 		} else {
 			for (int i=0;i<cards.size();i++) {
-				if (playable[i]) {cardPlayed=i; break;}
+				if (playableCost[i]==0) {cardPlayed=i; break;}
 			}
 			if (cardPlayed==-1) {
 				cardPlayed=0;
@@ -148,7 +179,7 @@ public class Player {
 		if (action==PlayerAction.CARD) {
 //			playedCards.add(c);
 			numCoin-=lastCard.costCoin;
-			applyCardEffect(lastCard,debugLog);
+//			applyCardEffect(lastCard,debugLog);
 		} else if (action==PlayerAction.WONDER) {
 			WonderStage[] wonderSide;
 			if (isWonderBSide) wonderSide=wonder.stagesB;
@@ -161,19 +192,40 @@ public class Player {
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
-		playable=new boolean[cards.size()];
+//		if (id==0) {
+//			for (Integer j:resourceMap.keySet()) {
+//				String s="";
+//				int ii=j;
+//				for (int i=0;i<7;i++) {
+//					s+=(ii%5)+",";
+//					ii=ii/5;
+//				}
+//				System.out.print(s+":");
+//				if (resourceMap.get(j)!=null) {
+//					for (NeighborResource n:resourceMap.get(j)) {
+//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+",");
+//					}
+//				}
+//				System.out.println();
+//			}
+//		}
+		playableCost=new int[cards.size()];
+		neighborResourceOptions= new Object[cards.size()];
+		leftCost=0;
+		rightCost=0;
 		for (int i=0;i<cards.size();i++) {
-			if (playedCards.contains(cards.get(i))) continue;
+			playableCost[i]=-1;
+			if (playedCards.contains(cards.get(i))) {playableCost[i]=-1;continue;}
 			if (cards.get(i).dependency!=null) {
 				for (Cards c:playedCards) {
 					if (c.name.endsWith(cards.get(i).dependency)) {
-						playable[i]=true;
+						playableCost[i]=0;
 						break;
 					}
 				}
-				if (playable[i]) continue;
+				if (playableCost[i]==0) continue;
 			}
-			if (cards.get(i).costCoin>numCoin) continue;
+			if (cards.get(i).costCoin>numCoin) {playableCost[i]=-1;continue;}
 			int needClay=cards.get(i).costClay, needOre=cards.get(i).costOre,
 				needStone=cards.get(i).costStone, needWood=cards.get(i).costWood,
 				needGlass=cards.get(i).costGlass, needLoom=cards.get(i).costLoom, needPapyrus=cards.get(i).costPapyrus;
@@ -188,8 +240,20 @@ public class Player {
 //			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
 //			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
 			int k=needClay+needOre*5+needStone*25+needWood*125+needGlass*625+needLoom*3125+needPapyrus*15625;
-			if (k==0||resourceMap.containsKey(k))
-				playable[i]=true;
+			if (k==0) playableCost[i]=0;
+			else if (!resourceMap.containsKey(k)) playableCost[i]=-1;
+			else if (resourceMap.get(k)==null) playableCost[i]=0;
+			else {
+				neighborResourceOptions[i]=resourceMap.get(k);
+				playableCost[i]=100;
+				for (NeighborResource n:resourceMap.get(k)) {
+					int cost = n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured+
+								n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+					playableCost[i]=Math.min(playableCost[i],cost);
+				}
+			}
+			if (playableCost[i]>numCoin) playableCost[i]=-1;
+//			if (id==0) System.out.println(k+":"+playableCost[i]);
 		}
 	}
 
@@ -255,19 +319,19 @@ public class Player {
 		} else if (c.name=="CARAVANSERY") {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
 		else if (c.name=="FORUM") {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
 		if (c.rtype==ResourceType.COIN) numCoin+=c.resourceValue;
-		else if (c.rtype==ResourceType.WOOD) numWood+=c.resourceValue;
-		else if (c.rtype==ResourceType.CLAY) numClay+=c.resourceValue;
-		else if (c.rtype==ResourceType.ORE) numOre+=c.resourceValue;
-		else if (c.rtype==ResourceType.STONE) numStone+=c.resourceValue;
-		else if (c.rtype==ResourceType.LOOM) numLoom+=c.resourceValue;
-		else if (c.rtype==ResourceType.GLASS) numGlass+=c.resourceValue;
-		else if (c.rtype==ResourceType.PAPYRUS) numPapyrus+=c.resourceValue;
-		else if (c.rtype==ResourceType.CLAYORE) {int[] r={1,5};addDualResource(r);resourceDescription+="CLAY/ORE,";}
-		else if (c.rtype==ResourceType.CLAYSTONE) {int[] r={1,25};addDualResource(r);resourceDescription+="CLAY/STONE,";}
-		else if (c.rtype==ResourceType.CLAYWOOD) {int[] r={1,125};addDualResource(r);resourceDescription+="CLAY/WOOD,";}
-		else if (c.rtype==ResourceType.ORESTONE) {int[] r={5,25};addDualResource(r);resourceDescription+="ORE/STONE,";}
-		else if (c.rtype==ResourceType.OREWOOD) {int[] r={5,125};addDualResource(r);resourceDescription+="ORE/WOOD,";}
-		else if (c.rtype==ResourceType.STONEWOOD) {int[] r={25,125};addDualResource(r);resourceDescription+="STONE/WOOD,";}
+		else if (c.rtype==ResourceType.CLAY) {numClay+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={1};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
+		else if (c.rtype==ResourceType.ORE) {numOre+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={5};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
+		else if (c.rtype==ResourceType.STONE) {numStone+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={25};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
+		else if (c.rtype==ResourceType.WOOD) {numWood+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={125};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
+		else if (c.rtype==ResourceType.GLASS) {numGlass++;int[] r={625};left.addNeighborResource(r,false,false);right.addNeighborResource(r,true,false);}
+		else if (c.rtype==ResourceType.LOOM) {numLoom++;int[] r={3125};left.addNeighborResource(r,false,false);right.addNeighborResource(r,true,false);}
+		else if (c.rtype==ResourceType.PAPYRUS) {numPapyrus++;int[] r={15625};left.addNeighborResource(r,false,false);right.addNeighborResource(r,true,false);}
+		else if (c.rtype==ResourceType.CLAYORE) {int[] r={1,5};addDualResource(r);resourceDescription+="CLAY/ORE,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
+		else if (c.rtype==ResourceType.CLAYSTONE) {int[] r={1,25};addDualResource(r);resourceDescription+="CLAY/STONE,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
+		else if (c.rtype==ResourceType.CLAYWOOD) {int[] r={1,125};addDualResource(r);resourceDescription+="CLAY/WOOD,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
+		else if (c.rtype==ResourceType.ORESTONE) {int[] r={5,25};addDualResource(r);resourceDescription+="ORE/STONE,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
+		else if (c.rtype==ResourceType.OREWOOD) {int[] r={5,125};addDualResource(r);resourceDescription+="ORE/WOOD,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
+		else if (c.rtype==ResourceType.STONEWOOD) {int[] r={25,125};addDualResource(r);resourceDescription+="STONE/WOOD,";left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}
 		else if (c.rtype==ResourceType.SHIELD) numShield+=c.resourceValue;
 		else if (c.rtype==ResourceType.SCIENCE) {
 			if (c.resourceValue==ScienceType.GEAR.ordinal()) numGear++;
@@ -294,7 +358,7 @@ public class Player {
 	}
 
 	public void addDualResource(int[] r) {
-		HashMap<Integer,Integer[]> newResource = new HashMap<Integer,Integer[]>();
+		HashMap<Integer,ArrayList<NeighborResource>> newResource = new HashMap<Integer,ArrayList<NeighborResource>>();
 		for (Integer i:resourceMap.keySet()) {
 			for (int j:r) {
 				if (!(i%(j*5)>=j*4)) newResource.put(i+j,null);
@@ -304,6 +368,49 @@ public class Player {
 		for (int i:r) {
 			resourceMap.put(i,null);
 		}
+	}
+
+	public void addNeighborResource(int[] r,boolean leftOrRight,boolean rawOrManufactured) {
+		HashMap<Integer,ArrayList<NeighborResource>> newResource = new HashMap<Integer,ArrayList<NeighborResource>>();
+		for (Integer i:resourceMap.keySet()) {
+			for (int j:r) {
+				if (!(i%(j*5)>=j*4)) {
+					if(resourceMap.containsKey(i+j)) {
+						if (resourceMap.get(i+j)!=null) {
+							if (resourceMap.get(i)==null) {
+								ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
+								a.add(new NeighborResource(leftOrRight,rawOrManufactured));
+								newResource.put(i+j,a);
+							} else {
+								for (NeighborResource n:resourceMap.get(i)) 
+									resourceMap.get(i+j).add(n.addExtraResource(leftOrRight,rawOrManufactured));
+							}
+						}
+					} else {
+						ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
+						if (resourceMap.get(i)==null) 
+							a.add(new NeighborResource(leftOrRight,rawOrManufactured));
+						else {
+							for (NeighborResource n:resourceMap.get(i)) 
+								a.add(n.addExtraResource(leftOrRight,rawOrManufactured));
+						}
+						newResource.put(i+j,a);
+					}
+				}
+			}
+		}
+		resourceMap.putAll(newResource);
+		for (int i:r) {
+			if (resourceMap.containsKey(i)) {
+				if (resourceMap.get(i)!=null)
+					resourceMap.get(i).add(new NeighborResource(leftOrRight,rawOrManufactured));
+			} else {
+				ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
+				a.add(new NeighborResource(leftOrRight,rawOrManufactured));
+				resourceMap.put(i,a);
+			}
+		}
+
 	}
 
 	public void countCards() {
