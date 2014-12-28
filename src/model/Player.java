@@ -22,8 +22,8 @@ public class Player {
 	public ArrayList<Cards> playedCards;
 	public HashMap<Integer,ArrayList<NeighborResource>> resourceMap = new HashMap<Integer,ArrayList<NeighborResource>>();
 	public String resourceDescription="",commerceDescription="";
+	public ArrayList<ArrayList<Integer>> resourceOptions = new ArrayList<ArrayList<Integer>>();
 	int[] playableCost;
-	Object[] neighborResourceOptions;
 	boolean canBuildWonder;
 	public boolean isWonderBSide;
 
@@ -133,26 +133,32 @@ public class Player {
 						}
 						else if (playableCost[cardPlayed]>0){
 							System.out.print("Choose trading option (");
-							ArrayList<NeighborResource> a = (ArrayList<NeighborResource>)neighborResourceOptions[cardPlayed];
-							HashSet<Integer> h = new HashSet<Integer>();
+							ArrayList<Integer> a = resourceOptions.get(cardPlayed);
 							for (int j=0;j<a.size();j++) {
-								NeighborResource n = a.get(j);
-								int lc=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
-								int rc=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
-								if (!h.contains(lc*100+rc)) {
-									h.add(lc*100+rc);
-									System.out.print(j+":"+lc+"&"+rc+" ");
-								}
+								System.out.print(j+":"+(a.get(j)/100)+"&"+(a.get(j)%100)+" ");
 							}
+//							ArrayList<NeighborResource> a = (ArrayList<NeighborResource>)neighborResourceOptions[cardPlayed];
+//							HashSet<Integer> h = new HashSet<Integer>();
+//							for (int j=0;j<a.size();j++) {
+//								NeighborResource n = a.get(j);
+//								int lc=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
+//								int rc=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+//								if (!h.contains(lc*100+rc)) {
+//									h.add(lc*100+rc);
+//									System.out.print(j+":"+lc+"&"+rc+" ");
+//								}
+//							}
 							System.out.println(")");
 							while (true) {
 								System.out.print(">>>");
 								try {
 									int tradingOption = Integer.parseInt(System.console().readLine());
 									if (tradingOption>=0&&tradingOption<a.size()) {
-										NeighborResource n = a.get(tradingOption);
-										leftCost=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
-										rightCost=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+//										NeighborResource n = a.get(tradingOption);
+//										leftCost=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
+//										rightCost=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+										leftCost=a.get(tradingOption)/100;
+										rightCost=a.get(tradingOption)%100;
 										break;
 									}
 								} catch (NumberFormatException e) {}
@@ -192,25 +198,25 @@ public class Player {
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
-//		if (id==0) {
-//			for (Integer j:resourceMap.keySet()) {
-//				String s="";
-//				int ii=j;
-//				for (int i=0;i<7;i++) {
-//					s+=(ii%5)+",";
-//					ii=ii/5;
-//				}
-//				System.out.print(s+":");
-//				if (resourceMap.get(j)!=null) {
-//					for (NeighborResource n:resourceMap.get(j)) {
-//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+",");
-//					}
-//				}
-//				System.out.println();
-//			}
-//		}
+		if (id==0) {
+			for (Integer j:resourceMap.keySet()) {
+				String s="";
+				int ii=j;
+				for (int i=0;i<7;i++) {
+					s+=(ii%5)+",";
+					ii=ii/5;
+				}
+				System.out.print(s+":");
+				if (resourceMap.get(j)!=null) {
+					for (NeighborResource n:resourceMap.get(j)) {
+						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+",");
+					}
+				}
+				System.out.println();
+			}
+		}
 		playableCost=new int[cards.size()];
-		neighborResourceOptions= new Object[cards.size()];
+		resourceOptions = new ArrayList<ArrayList<Integer>>();
 		leftCost=0;
 		rightCost=0;
 		for (int i=0;i<cards.size();i++) {
@@ -240,17 +246,27 @@ public class Player {
 //			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
 //			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
 			int k=needClay+needOre*5+needStone*25+needWood*125+needGlass*625+needLoom*3125+needPapyrus*15625;
-			if (k==0) playableCost[i]=0;
-			else if (!resourceMap.containsKey(k)) playableCost[i]=-1;
-			else if (resourceMap.get(k)==null) playableCost[i]=0;
+			if (k==0) {playableCost[i]=0; resourceOptions.add(null);}
+			else if (!resourceMap.containsKey(k)) {playableCost[i]=-1; resourceOptions.add(null);}
+			else if (resourceMap.get(k)==null) {playableCost[i]=0; resourceOptions.add(null);}
 			else {
-				neighborResourceOptions[i]=resourceMap.get(k);
-				playableCost[i]=100;
-				for (NeighborResource n:resourceMap.get(k)) {
-					int cost = n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured+
-								n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
-					playableCost[i]=Math.min(playableCost[i],cost);
+//				neighborResourceOptions[i]=resourceMap.get(k);
+//				playableCost[i]=100;
+//				for (NeighborResource n:resourceMap.get(k)) {
+//					int cost = n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured+
+//								n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
+//					playableCost[i]=Math.min(playableCost[i],cost);
+//				}
+				ArrayList<Integer> a = new ArrayList<Integer>(NeighborResource.getCost(k,leftTradingCostRaw,leftTradingCostManufactured,rightTradingCostRaw,rightTradingCostManufactured,resourceMap));
+				int minCost=100;
+				if (id==0) System.out.print(cards.get(i).name+":"+needClay+""+needOre+""+needStone+""+needWood+""+needGlass+""+needLoom+""+needPapyrus+":");
+				for (int j:a) {
+					if (id==0) System.out.print((j/100)+" "+(j%100)+",");
+					minCost=Math.min(minCost,j/100+j%100);
 				}
+				if (id==0) System.out.println();
+				resourceOptions.add(a);
+				playableCost[i]=minCost;
 			}
 			if (playableCost[i]>numCoin) playableCost[i]=-1;
 //			if (id==0) System.out.println(k+":"+playableCost[i]);
@@ -377,29 +393,26 @@ public class Player {
 				if (!(i%(j*5)>=j*4)) {
 					if(resourceMap.containsKey(i+j)) {
 						if (resourceMap.get(i+j)!=null) {
-							if (resourceMap.get(i)==null) {
-								ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
-								a.add(new NeighborResource(leftOrRight,rawOrManufactured));
-								newResource.put(i+j,a);
-							} else {
-								for (NeighborResource n:resourceMap.get(i)) 
-									resourceMap.get(i+j).add(n.addExtraResource(leftOrRight,rawOrManufactured));
-							}
+							ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
+							if (resourceMap.get(i)==null) a.add(new NeighborResource(leftOrRight,rawOrManufactured));
+							else a.add(new NeighborResource(leftOrRight,rawOrManufactured,i));
+							newResource.put(i+j,a);
 						}
 					} else {
 						ArrayList<NeighborResource> a = new ArrayList<NeighborResource>();
-						if (resourceMap.get(i)==null) 
-							a.add(new NeighborResource(leftOrRight,rawOrManufactured));
-						else {
-							for (NeighborResource n:resourceMap.get(i)) 
-								a.add(n.addExtraResource(leftOrRight,rawOrManufactured));
-						}
+						if (resourceMap.get(i)==null) a.add(new NeighborResource(leftOrRight,rawOrManufactured));
+						else a.add(new NeighborResource(leftOrRight,rawOrManufactured,i));
 						newResource.put(i+j,a);
 					}
 				}
 			}
 		}
-		resourceMap.putAll(newResource);
+//		resourceMap.putAll(newResource);
+		for (Integer i:newResource.keySet()) {
+			if (resourceMap.containsKey(i)) for (NeighborResource n:newResource.get(i)) resourceMap.get(i).add(n); 
+			else resourceMap.put(i,newResource.get(i));
+			
+		}
 		for (int i:r) {
 			if (resourceMap.containsKey(i)) {
 				if (resourceMap.get(i)!=null)
