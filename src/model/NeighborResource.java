@@ -5,8 +5,10 @@ import java.util.HashSet;
 
 
 public class NeighborResource {
+	public static int nid=0;
 	public int leftRaw=0,leftManufactured=0,rightRaw=0,rightManufactured=0;
 	public int prerequisite;
+	public int id;
 	public NeighborResource(int leftRaw,int leftManufactured,int rightRaw,int rightManufactured) {
 		this.leftRaw=leftRaw;
 		this.leftManufactured=leftManufactured;
@@ -22,6 +24,7 @@ public class NeighborResource {
 			if (rawOrManufactured) rightRaw=1;
 			else rightManufactured=1;
 		}
+		this.id=nid;
 	}
 
 	public NeighborResource(boolean leftOrRight,boolean rawOrManufactured,int prerequisite) {
@@ -33,6 +36,12 @@ public class NeighborResource {
 			else rightManufactured=1;
 		}
 		this.prerequisite=prerequisite;
+		this.id=nid;
+	}
+
+	public NeighborResource(int prerequisite) {
+		this.prerequisite=prerequisite;
+		this.id=nid;
 	}
 
 	public NeighborResource addExtraResource(boolean leftOrRight,boolean rawOrManufactured) {
@@ -45,20 +54,21 @@ public class NeighborResource {
 		}
 	}
 
-	public static HashSet<Integer> getCost(int resourceCode, int leftTradingCostRaw, int leftTradingCostManufactured,int rightTradingCostRaw, int rightTradingCostManufactured,
+	public static HashSet<Integer> getCost(int resourceCode, int pid, int leftTradingCostRaw, int rightTradingCostRaw, int tradingCostManufactured,
 							 HashMap<Integer,ArrayList<NeighborResource>> resourceMap) {
 		HashSet<Integer> set = new HashSet<Integer>();
 		ArrayList<NeighborResource> a = resourceMap.get(resourceCode);
 		if (a==null) return null;
 		for (NeighborResource n:a) {
-			int currentCost=(n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured)*100+
-							(n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured);
+			if (n.id==pid) continue;
+			int currentCost=(n.leftRaw*leftTradingCostRaw+n.leftManufactured*tradingCostManufactured)*100+
+							(n.rightRaw*rightTradingCostRaw+n.rightManufactured*tradingCostManufactured);
 			if (n.prerequisite==0) set.add(currentCost);
 			else {
-				HashSet<Integer> h = getCost(n.prerequisite,leftTradingCostRaw,leftTradingCostManufactured,rightTradingCostRaw,rightTradingCostManufactured,resourceMap);
-				for (int i:h) set.add(i+currentCost);
+				HashSet<Integer> h = getCost(n.prerequisite,n.id,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap);
+				if (h!=null) for (int i:h) set.add(i+currentCost);
+				else set.add(currentCost);
 			}
-
 		}
 		return set;
 	}
