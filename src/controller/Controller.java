@@ -15,12 +15,13 @@ public class Controller {
 
 	public Random random;
 	public static boolean debugLog=true;
+	public ArrayList<Integer> lastScore;
+	public ArrayList<Integer> lastWinner;
 
 	public Controller() {
 		random = new Random();
 		Cards.buildDependencyMap();
-		int numPlayers=7;
-		newGame(numPlayers);
+		if (debugLog) newGame(7);
 	}
 
 	public void newGame(int numPlayers) {
@@ -67,7 +68,7 @@ public class Controller {
 				else remainingCards=cc[(k+5)%numPlayers];
 				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
 				else {
-					System.out.println("Extra turn from wonder effect");
+					if (debugLog) System.out.println("Extra turn from wonder effect");
 					p[k].getAction(remainingCards,debugLog);
 					resolvePlayerOutcome(p[k],discardPile);
 				}
@@ -110,10 +111,11 @@ public class Controller {
 		ArrayList<Wonder> wonders = new ArrayList<Wonder>();
 		wonders.addAll(Arrays.asList(Wonder.wonders));
 		for (int i=0;i<numPlayers;i++) {
-			int j=random.nextInt(wonders.size());
-			w[i]=wonders.remove(j);
-//			w[i]=wonders.remove(0);
-			if (debugLog) System.out.println(w[i].name);
+			if (debugLog) {
+				int j=random.nextInt(wonders.size());
+				w[i]=wonders.remove(j);
+				System.out.println(w[i].name);
+			} else w[i]=wonders.remove(0);
 		}
 
 	}
@@ -189,12 +191,13 @@ public class Controller {
 		int highScore=0;
 		int highestCoin=0;
 		ArrayList<Integer> winner = new ArrayList<Integer>();
-		System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE | VICTORY DEFEAT");
+		if (debugLog) System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE | VICTORY DEFEAT");
+		else lastScore=new ArrayList<Integer>();
 		for (Player pp:p) {
 			pp.countCards();
-			System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d | %7d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
+			if (debugLog) System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d | %7d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
-		System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
+		if (debugLog) System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
 		for (int i=0;i<p.length;i++) {
 			int militaryScore=0,coinScore=0,wonderScore=0,civilianScore=0,scienceScore=0,commercialScore=0,guildScore=0,totalScore;
 			militaryScore=p[i].victoryToken-p[i].defeatToken;
@@ -234,7 +237,8 @@ public class Controller {
 			}
 			scienceScore=getMaxScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet,p[i].numVariableScience);
 			totalScore = militaryScore+coinScore+wonderScore+civilianScore+scienceScore+commercialScore+guildScore;
-			System.out.printf("%6d | %8d %4d %6d %8d %7d %10d %5d | %5d\n",i,militaryScore,coinScore,wonderScore,civilianScore,scienceScore,commercialScore,guildScore,totalScore);
+			if (debugLog) System.out.printf("%6d | %8d %4d %6d %8d %7d %10d %5d | %5d\n",i,militaryScore,coinScore,wonderScore,civilianScore,scienceScore,commercialScore,guildScore,totalScore);
+			else lastScore.add(totalScore);
 			if (totalScore>highScore||totalScore==highScore&&p[i].numCoin>highestCoin) {
 				highScore=totalScore;
 				highestCoin=p[i].numCoin;
@@ -242,14 +246,16 @@ public class Controller {
 				winner.add(i);
 			} else if (totalScore==highScore&&p[i].numCoin==highestCoin) winner.add(i);
 		}
-		if (winner.size()==1) System.out.println("The winner is Player "+winner.get(0)+"!");
-		else {
-			System.out.print("The winners are");
-			for (Integer i:winner) {
-				System.out.print(" Player "+i);
+		if (debugLog) {
+			if (winner.size()==1) System.out.println("The winner is Player "+winner.get(0)+"!");
+			else {
+				System.out.print("The winners are");
+				for (Integer i:winner) {
+					System.out.print(" Player "+i);
+				}
+				System.out.println("!");
 			}
-			System.out.println("!");
-		}
+		} else lastWinner=winner;
 	}
 
 	public int getMaxScienceScore(int numGear,int numCompass,int numTablet,int numVariableScience) {

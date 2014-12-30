@@ -26,7 +26,7 @@ public class Player {
 	public ArrayList<Integer> wonderOptions;
 	int[] playableCost;
 	boolean canBuildWonder;
-	public boolean isWonderBSide;
+	public boolean isWonderBSide=false;
 	public int hasFreeBuild=-1;
 	public boolean canCopyGuild=false;
 	public boolean canPlayLastCard=false;
@@ -208,7 +208,8 @@ public class Player {
 
 		} else {
 			for (int i=0;i<cards.size();i++) {
-				if (playableCost[i]==0) {cardPlayed=i; break;}
+				if (hasFreeBuild>0&&playableCost[i]!=-2) {hasFreeBuild=0;cardPlayed=i;break;}
+				else if (playableCost[i]==0) {cardPlayed=i; break;}
 				else if (playableCost[i]>0) {
 					ArrayList<Integer> a = resourceOptions.get(i);
 					for (int j:a) {
@@ -246,23 +247,23 @@ public class Player {
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
-		if (id==0) {
-			for (Integer j:resourceMap.keySet()) {
-				String s="";
-				int ii=j;
-				for (int i=0;i<7;i++) {
-					s+=(ii%5)+",";
-					ii=ii/5;
-				}
-				System.out.print(s+":");
-				if (resourceMap.get(j)!=null) {
-					for (NeighborResource n:resourceMap.get(j)) {
-						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+",");
-					}
-				}
-				System.out.println();
-			}
-		}
+//		if (id==0) {
+//			for (Integer j:resourceMap.keySet()) {
+//				String s="";
+//				int ii=j;
+//				for (int i=0;i<7;i++) {
+//					s+=(ii%5)+",";
+//					ii=ii/5;
+//				}
+//				System.out.print(s+":");
+//				if (resourceMap.get(j)!=null) {
+//					for (NeighborResource n:resourceMap.get(j)) {
+//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+",");
+//					}
+//				}
+//				System.out.println();
+//			}
+//		}
 		playableCost=new int[cards.size()];
 		resourceOptions = new ArrayList<ArrayList<Integer>>();
 		leftCost=0;
@@ -546,20 +547,22 @@ public class Player {
 				}
 				catch (NumberFormatException e) {}
 			}
+		} else {
+			if (guildChoices.size()>0) playedCards.add(guildChoices.get(0));
 		}
 	}
 
 	public void playFromDiscard(ArrayList<Cards> discardPile) {
+		canPlayFromDiscard=false;
+		ArrayList<Cards> selection = new ArrayList<Cards>();
+		HashSet<Cards> selected = new HashSet<Cards>();
+		for (Cards c:discardPile) {
+			if (playedCards.contains(c)) selection.add(null);
+			else if (selected.contains(c)) selection.add(null);
+			else {selection.add(c); selected.add(c);}
+		}
 		if (id==0&&Controller.debugLog) {
-			canPlayFromDiscard=false;
-			ArrayList<Cards> selection = new ArrayList<Cards>();
-			HashSet<Cards> selected = new HashSet<Cards>();
-			for (Cards c:discardPile) {
-				if (playedCards.contains(c)) selection.add(null);
-				else if (selected.contains(c)) selection.add(null);
-				else {selection.add(c); selected.add(c);}
-			}
-			if (selection.size()==0) {
+			if (selected.size()==0) {
 				System.out.println("There are no playable cards from the discard pile");
 				return;
 			}
@@ -579,7 +582,17 @@ public class Player {
 				}
 				catch (NumberFormatException e) {}
 			}
-
+		} else {
+			if (selected.size()>0) {
+				for (int i=0;i<discardPile.size();i++){
+					if (selection.get(i)!=null) {
+						Cards c = discardPile.remove(i);
+						playedCards.add(c);
+						applyCardEffect(c,Controller.debugLog);
+						break;
+					}
+				}
+			}
 		}
 	}
 
