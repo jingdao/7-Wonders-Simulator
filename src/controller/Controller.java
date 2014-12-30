@@ -49,6 +49,7 @@ public class Controller {
 			for (int j=0;j<numPlayers;j++) {
 				cc[j]=new ArrayList<Cards>();
 				cc[j].addAll(Arrays.asList(c[j]));
+				if (p[j].hasFreeBuild==0) p[j].hasFreeBuild=1;
 			}
 			for (int j=0;j<6;j++) {
 				if (debugLog) System.out.println("Turn "+(j+1));
@@ -57,38 +58,24 @@ public class Controller {
 					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers],debugLog);
 					else p[k].getAction(cc[(k+j)%numPlayers],debugLog);
 				}
-				for (Player pp:p) {
-					if (pp.leftCost>0) {
-						pp.numCoin-=pp.leftCost;
-						pp.left.numCoin+=pp.leftCost;
-						if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.leftCost+" coin to Player "+pp.left.id);
-					}
-					if (pp.rightCost>0) {
-						pp.numCoin-=pp.rightCost;
-						pp.right.numCoin+=pp.rightCost;
-						if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.rightCost+" coin to Player "+pp.right.id);
-					}
-					if (pp.action==PlayerAction.CARD) {
-						pp.numCoin-=pp.lastCard.costCoin;
-						pp.playedCards.add(pp.lastCard);
-						pp.applyCardEffect(pp.lastCard,debugLog);
-					} else if (pp.action==PlayerAction.WONDER) {
-						WonderStage[] wonderSide;
-						if (pp.isWonderBSide) wonderSide=pp.wonder.stagesB;
-						else wonderSide=pp.wonder.stagesA;
-						pp.applyWonderEffect(wonderSide[pp.numWonderStages],debugLog);
-					}
-					else if (pp.action==PlayerAction.COIN) {
-						discardPile.add(pp.lastCard);
-						pp.numCoin+=3;
-						if (debugLog) System.out.println("Player "+pp.id+" discarded a card for 3 coin");
-					}
+				for (Player pp:p) resolvePlayerOutcome(pp,discardPile);
+				if (j!=5) for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
+			}
+			for (int k=0;k<numPlayers;k++) {
+				ArrayList<Cards> remainingCards;
+				if (age==1||age==3) remainingCards=cc[(5+numPlayers-k)%numPlayers];
+				else remainingCards=cc[(k+5)%numPlayers];
+				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
+				else {
+					System.out.println("Extra turn from wonder effect");
+					p[k].getAction(remainingCards,debugLog);
+					resolvePlayerOutcome(p[k],discardPile);
 				}
 			}
-			for (int k=0;k<numPlayers;k++) discardPile.add(cc[k].get(0));
-			System.out.print("Discard pile: ");
-			for (Cards d:discardPile) System.out.print(d.name+",");
-			System.out.println();
+			for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
+//			System.out.print("Discard pile: ");
+//			for (Cards d:discardPile) System.out.print(d.name+",");
+//			System.out.println();
 			int[] warResult = new int[numPlayers];
 			for (int j=0;j<numPlayers-1;j++) {
 				if (p[j].numShield>p[j+1].numShield) {
@@ -114,6 +101,7 @@ public class Controller {
 				System.out.println(")");
 			}
 		}
+		for (Player pp:p) if (pp.canCopyGuild) pp.copyGuild();
 		countScore(p);
 	}
 
@@ -167,7 +155,34 @@ public class Controller {
 //				System.out.println(i+" "+c[i][k].name);
 			}
 		}
-
+	}
+ 
+	public void resolvePlayerOutcome(Player pp,ArrayList<Cards> discardPile) {
+		if (pp.leftCost>0) {
+			pp.numCoin-=pp.leftCost;
+			pp.left.numCoin+=pp.leftCost;
+			if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.leftCost+" coin to Player "+pp.left.id);
+		}
+		if (pp.rightCost>0) {
+			pp.numCoin-=pp.rightCost;
+			pp.right.numCoin+=pp.rightCost;
+			if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.rightCost+" coin to Player "+pp.right.id);
+		}
+		if (pp.action==PlayerAction.CARD) {
+			pp.numCoin-=pp.lastCard.costCoin;
+			pp.playedCards.add(pp.lastCard);
+			pp.applyCardEffect(pp.lastCard,debugLog);
+		} else if (pp.action==PlayerAction.WONDER) {
+			WonderStage[] wonderSide;
+			if (pp.isWonderBSide) wonderSide=pp.wonder.stagesB;
+			else wonderSide=pp.wonder.stagesA;
+			pp.applyWonderEffect(wonderSide[pp.numWonderStages],debugLog);
+		}
+		else if (pp.action==PlayerAction.COIN) {
+			discardPile.add(pp.lastCard);
+			pp.numCoin+=3;
+			if (debugLog) System.out.println("Player "+pp.id+" discarded a card for 3 coin");
+		}
 	}
 
 	public void countScore(Player[] p) {
@@ -217,7 +232,7 @@ public class Controller {
 					guildScore+=p[i].numWonderStages+p[i].left.numWonderStages+p[i].right.numWonderStages;
 				}
 			}
-			scienceScore=getScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet);
+			scienceScore=getMaxScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet,p[i].numVariableScience);
 			totalScore = militaryScore+coinScore+wonderScore+civilianScore+scienceScore+commercialScore+guildScore;
 			System.out.printf("%6d | %8d %4d %6d %8d %7d %10d %5d | %5d\n",i,militaryScore,coinScore,wonderScore,civilianScore,scienceScore,commercialScore,guildScore,totalScore);
 			if (totalScore>highScore||totalScore==highScore&&p[i].numCoin>highestCoin) {
@@ -227,7 +242,7 @@ public class Controller {
 				winner.add(i);
 			} else if (totalScore==highScore&&p[i].numCoin==highestCoin) winner.add(i);
 		}
-		if (winner.size()==1) System.out.println("The winner is Player "+winner+"!");
+		if (winner.size()==1) System.out.println("The winner is Player "+winner.get(0)+"!");
 		else {
 			System.out.print("The winners are");
 			for (Integer i:winner) {
@@ -235,6 +250,24 @@ public class Controller {
 			}
 			System.out.println("!");
 		}
+	}
+
+	public int getMaxScienceScore(int numGear,int numCompass,int numTablet,int numVariableScience) {
+		int maxScore=0,j,n1,n2,n3;
+		for (int i=0;i<Math.pow(3,numVariableScience);i++) {
+			j=i;
+			n1=numGear;
+			n2=numCompass;
+			n3=numTablet;
+			for(int k=0;k<numVariableScience;k++) {
+				if (j%3==0) n1++;
+				else if (j%3==1) n2++;
+				else if (j%3==2) n3++;
+				j/=3;
+			}
+			maxScore=Math.max(maxScore,getScienceScore(n1,n2,n3));
+		}
+		return maxScore;
 	}
 
 	public int getScienceScore(int numGear,int numCompass,int numTablet) {

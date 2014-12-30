@@ -61,7 +61,7 @@ public class Cards {
 	public static Cards Library = new Cards("LIBRARY",0,0,2,0,0,1,0,0,CardType.GREEN,ResourceType.SCIENCE,ScienceType.TABLET.ordinal(),"SCRIPTORIUM");
 	public static Cards School = new Cards("SCHOOL",0,0,0,1,0,0,1,0,CardType.GREEN,ResourceType.SCIENCE,ScienceType.TABLET.ordinal(),null);
 
-	public static Cards Pantheon = new Cards("PANTHEON",2,1,0,0,1,1,1,0,CardType.BLUE,ResourceType.VICTORY,7,"PANTHEON");
+	public static Cards Pantheon = new Cards("PANTHEON",2,1,0,0,1,1,1,0,CardType.BLUE,ResourceType.VICTORY,7,"TEMPLE");
 	public static Cards Gardens = new Cards("GARDENS",2,0,0,1,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,5,"STATUE");
 	public static Cards Townhall = new Cards("TOWN HALL",0,1,2,0,1,0,0,0,CardType.BLUE,ResourceType.VICTORY,6,null);
 	public static Cards Palace = new Cards("PALACE",1,1,1,1,1,1,1,0,CardType.BLUE,ResourceType.VICTORY,8,null);

@@ -11,7 +11,7 @@ public class Player {
 	public Player left,right;
 	public int id,numClay,numOre,numStone,numWood,numGlass,numLoom,numPapyrus;
 	public int numCoin,numShield,numWonderStages;
-	public int numGear,numCompass,numTablet;
+	public int numGear,numCompass,numTablet,numVariableScience;
 	public int victoryToken,defeatToken;
 	public int numBrown,numGray,numYellow,numBlue,numGreen,numRed,numPurple;
 	public int leftTradingCostRaw=2,rightTradingCostRaw=2,tradingCostManufactured=2;
@@ -27,6 +27,10 @@ public class Player {
 	int[] playableCost;
 	boolean canBuildWonder;
 	public boolean isWonderBSide;
+	public int hasFreeBuild=-1;
+	public boolean canCopyGuild=false;
+	public boolean canPlayLastCard=false;
+	public boolean canPlayFromDiscard=false;
 
 	public Player(int id,Wonder w) {
 		this.id=id;
@@ -74,6 +78,7 @@ public class Player {
 			System.out.println("Resources: "+numClay+","+numOre+","+numStone+","+numWood+","+numGlass+","+numLoom+","+numPapyrus);
 			System.out.println("           "+numCoin+","+numShield+","+numGear+","+numCompass+","+numTablet+","+numWonderStages);
 			System.out.println(resourceDescription+commerceDescription);
+			if (hasFreeBuild>0) System.out.println("FREE BUILD");
 			while (true) {
 				System.out.print("Choose action (0:card 1:wonder 2:discard 3:look)>>>");
 				try { 
@@ -149,7 +154,16 @@ public class Player {
 					cardPlayed = Integer.parseInt(System.console().readLine())-1;
 					if (cardPlayed>=0&&cardPlayed<cards.size()) {
 						if (action!=PlayerAction.CARD) break;
-						else if (playableCost[cardPlayed]<0) {
+						if (playableCost[cardPlayed]!=-2&&hasFreeBuild>0) {
+							System.out.print("Use free build? (1:yes 0:no)>>>");
+							try {
+								if(Integer.parseInt(System.console().readLine())==1) {
+									hasFreeBuild=0; break;
+								}
+							}
+							catch (NumberFormatException e) {}
+						}
+						if (playableCost[cardPlayed]<0) {
 							if (playedCards.contains(cards.get(cardPlayed))) System.out.println("You cannot build 2 identical structures");
 							else System.out.println("You do not have enough resources");
 						}
@@ -195,6 +209,18 @@ public class Player {
 		} else {
 			for (int i=0;i<cards.size();i++) {
 				if (playableCost[i]==0) {cardPlayed=i; break;}
+				else if (playableCost[i]>0) {
+					ArrayList<Integer> a = resourceOptions.get(i);
+					for (int j:a) {
+						if ((j/100+j%100)==playableCost[i]) {
+							leftCost=j/100;
+							rightCost=j%100;
+							break;
+						}
+					}
+					cardPlayed=i;
+					break;
+				}
 			}
 			if (cardPlayed==-1) {
 				cardPlayed=0;
@@ -220,30 +246,30 @@ public class Player {
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
-//		if (id==0) {
-//			for (Integer j:resourceMap.keySet()) {
-//				String s="";
-//				int ii=j;
-//				for (int i=0;i<7;i++) {
-//					s+=(ii%5)+",";
-//					ii=ii/5;
-//				}
-//				System.out.print(s+":");
-//				if (resourceMap.get(j)!=null) {
-//					for (NeighborResource n:resourceMap.get(j)) {
-//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+",");
-//					}
-//				}
-//				System.out.println();
-//			}
-//		}
+		if (id==0) {
+			for (Integer j:resourceMap.keySet()) {
+				String s="";
+				int ii=j;
+				for (int i=0;i<7;i++) {
+					s+=(ii%5)+",";
+					ii=ii/5;
+				}
+				System.out.print(s+":");
+				if (resourceMap.get(j)!=null) {
+					for (NeighborResource n:resourceMap.get(j)) {
+						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+",");
+					}
+				}
+				System.out.println();
+			}
+		}
 		playableCost=new int[cards.size()];
 		resourceOptions = new ArrayList<ArrayList<Integer>>();
 		leftCost=0;
 		rightCost=0;
 		for (int i=0;i<cards.size();i++) {
 			playableCost[i]=-1;
-			if (playedCards.contains(cards.get(i))) {playableCost[i]=-1;resourceOptions.add(null);continue;}
+			if (playedCards.contains(cards.get(i))) {playableCost[i]=-2;resourceOptions.add(null);continue;}
 			if (cards.get(i).dependency!=null) {
 				for (Cards c:playedCards) {
 					if (c.name.endsWith(cards.get(i).dependency)) {
@@ -322,6 +348,7 @@ public class Player {
 			for (int i:wonderOptions) {
 				minCost=Math.min(minCost,i/100+i%100);
 			}
+			if (minCost==0) wonderOptions=null;
 			return minCost<=numCoin;
 		}
 	}
@@ -370,6 +397,7 @@ public class Player {
 		else if (c.name=="MARKETPLACE") tradingCostManufactured=1;
 		else if (c.name=="WEST TRADING POST") leftTradingCostRaw=1;
 		else if (c.name=="EAST TRADING POST") rightTradingCostRaw=1;
+		else if (c.name=="SCIENTISTS GUILD") numVariableScience++;
 		if (c.rtype==ResourceType.COIN) numCoin+=c.resourceValue;
 		else if (c.rtype==ResourceType.CLAY) {numClay+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={1};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
 		else if (c.rtype==ResourceType.ORE) {numOre+=c.resourceValue;for (int j=0;j<c.resourceValue;j++){int[] r={5};left.addNeighborResource(r,false,true);right.addNeighborResource(r,true,true);}}
@@ -407,6 +435,11 @@ public class Player {
 		if (w.special==SpecialResource.RAW_MATERIALS) {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
 		else if (w.special==SpecialResource.MANUFACTURED_GOODS) {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
 		else if (w.special==SpecialResource.TRADING) {leftTradingCostRaw=1; rightTradingCostRaw=1;}
+		else if (w.special==SpecialResource.SCIENCE) numVariableScience++;
+		else if (w.special==SpecialResource.FREE_BUILD) hasFreeBuild=1;
+		else if (w.special==SpecialResource.GUILD) canCopyGuild=true;
+		else if (w.special==SpecialResource.PLAY_LAST_CARD) canPlayLastCard=true;
+		else if (w.special==SpecialResource.PLAY_FROM_DISCARD) canPlayFromDiscard=true;
 		if (debugLog) System.out.println();
 	}
 
@@ -489,6 +522,65 @@ public class Player {
 			}
 		}
 
+	}
+
+	public void copyGuild() {
+		ArrayList<Cards> guildChoices = new ArrayList<Cards>();
+		for (Cards c:left.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
+		for (Cards c:right.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
+		if (id==0&&Controller.debugLog) {
+			if (guildChoices.size()==0) {
+				System.out.println("There are no neighbouring guilds to copy");
+				return;
+			}
+			while (true) {
+				System.out.print("Choose a guild to copy: (");
+				for (int i=0;i<guildChoices.size();i++) System.out.print(i+":"+guildChoices.get(i).name+" ");
+				System.out.print(")>>>");
+				try {
+					int choice = Integer.parseInt(System.console().readLine());
+					if (choice>=0&&choice<guildChoices.size()) {
+						playedCards.add(guildChoices.get(choice));
+						break;
+					}
+				}
+				catch (NumberFormatException e) {}
+			}
+		}
+	}
+
+	public void playFromDiscard(ArrayList<Cards> discardPile) {
+		if (id==0&&Controller.debugLog) {
+			canPlayFromDiscard=false;
+			ArrayList<Cards> selection = new ArrayList<Cards>();
+			HashSet<Cards> selected = new HashSet<Cards>();
+			for (Cards c:discardPile) {
+				if (playedCards.contains(c)) selection.add(null);
+				else if (selected.contains(c)) selection.add(null);
+				else {selection.add(c); selected.add(c);}
+			}
+			if (selection.size()==0) {
+				System.out.println("There are no playable cards from the discard pile");
+				return;
+			}
+			while (true) {
+				System.out.print("Choose a card from the discard pile: (");
+				for (int i=0;i<discardPile.size();i++) if (selection.get(i)!=null) System.out.print(i+":"+discardPile.get(i).name+" ");
+				System.out.print(")>>>");
+				try {
+					int choice = Integer.parseInt(System.console().readLine());
+					if (choice>=0&&choice<discardPile.size()&&selection.get(choice)!=null) {
+						System.out.println("Extra turn playing from discard");
+						Cards c=discardPile.remove(choice);
+						playedCards.add(c);
+						applyCardEffect(c,Controller.debugLog);
+						break;
+					}
+				}
+				catch (NumberFormatException e) {}
+			}
+
+		}
 	}
 
 	public void countCards() {

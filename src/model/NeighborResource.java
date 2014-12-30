@@ -82,4 +82,7 @@ public class NeighborResource {
 		return s;
 	} 
 
+	public String toString() {
+		return leftRaw+""+leftManufactured+""+rightRaw+""+rightManufactured+NeighborResource.getStringFromResourceCode(prerequisite);
+	}
 }
