@@ -7,9 +7,9 @@ public class Simulator {
 	public Controller con;
 
 	public Simulator() {
-		Controller.debugLog=false;
+		Controller.manualSimulation=false;
 		con = new Controller();
-		simulateRandom(10000);
+		simulateRandom(1000);
 	}
 
 	public void simulateRandom(int numSimulations) {

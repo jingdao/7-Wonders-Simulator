@@ -2,12 +2,14 @@ package model;
 
 import java.util.ArrayList;
 import java.io.Console;
+import view.CardView;
 import controller.Controller;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class Player {
 
+	public CardView view;
 	public Player left,right;
 	public int id,numClay,numOre,numStone,numWood,numGlass,numLoom,numPapyrus;
 	public int numCoin,numShield,numWonderStages;
@@ -24,17 +26,18 @@ public class Player {
 	public String resourceDescription="",commerceDescription="";
 	public ArrayList<ArrayList<Integer>> resourceOptions;
 	public ArrayList<Integer> wonderOptions;
-	int[] playableCost;
-	boolean canBuildWonder;
+	public int[] playableCost;
+	public boolean canBuildWonder;
 	public boolean isWonderBSide=false;
 	public int hasFreeBuild=-1;
 	public boolean canCopyGuild=false;
 	public boolean canPlayLastCard=false;
 	public boolean canPlayFromDiscard=false;
 
-	public Player(int id,Wonder w) {
+	public Player(int id,Wonder w,CardView v) {
 		this.id=id;
 		this.wonder=w;
+		this.view=v;
 		this.playedCards=new ArrayList<Cards>();
 		this.numCoin=3;
 		switch (w.startingResource) {
@@ -46,166 +49,20 @@ public class Player {
 			case LOOM: numLoom++; break;
 			case PAPYRUS: numPapyrus++; break;
 		}
-		if (id==0&&Controller.debugLog) {
-			while (true) {
-				System.out.print("Choose Wonder side (0: side A, 1: side B)>>>");
-				try { 
-					int wonderSide = Integer.parseInt(System.console().readLine());
-					if (wonderSide==0) isWonderBSide=false;
-					else if (wonderSide==1) isWonderBSide=true;
-					else continue;
-					break;
-				}
-				catch (NumberFormatException e) {}
-			}
+		if (id==0&&Controller.manualSimulation) {
+			view.selectWonderSide(this);
 		}
 	}
 
-	public void getAction(ArrayList<Cards> cards,boolean debugLog) {
+	public void getAction(ArrayList<Cards> cards) {
 		checkResources(cards);
 		canBuildWonder=checkWonder();
 		action = PlayerAction.CARD;
 		int cardPlayed = -1;
-		if (id==0&&debugLog) {
-			int i=0;
-			for(Cards c:cards) {
-				if (playableCost[i]==0) System.out.print(c.name+",");
-				else if (playableCost[i]<0) System.out.print(c.name+"(x),");
-				else System.out.print(c.name+"("+playableCost[i]+"),");
-				i++;
-			}
-			System.out.println("");
-			System.out.println("Resources: "+numClay+","+numOre+","+numStone+","+numWood+","+numGlass+","+numLoom+","+numPapyrus);
-			System.out.println("           "+numCoin+","+numShield+","+numGear+","+numCompass+","+numTablet+","+numWonderStages);
-			System.out.println(resourceDescription+commerceDescription);
-			if (hasFreeBuild>0) System.out.println("FREE BUILD");
-			while (true) {
-				System.out.print("Choose action (0:card 1:wonder 2:discard 3:look)>>>");
-				try { 
-					action = PlayerAction.values()[Integer.parseInt(System.console().readLine())];
-					if (action==PlayerAction.WONDER) { 
-						if (canBuildWonder) {
-							if (wonderOptions!=null) {
-								System.out.print("Choose trading option (");
-								for (int j=0;j<wonderOptions.size();j++) {
-									System.out.print(j+":"+(wonderOptions.get(j)/100)+"&"+(wonderOptions.get(j)%100)+" ");
-								}
-								System.out.println(")");
-								while (true) {
-									System.out.print(">>>");
-									try {
-										int tradingOption = Integer.parseInt(System.console().readLine());
-										if (tradingOption>=0&&tradingOption<wonderOptions.size()) {
-											leftCost=wonderOptions.get(tradingOption)/100;
-											rightCost=wonderOptions.get(tradingOption)%100;
-											break;
-										}
-									} catch (NumberFormatException e) {}
-								}
-							}
-							break;
-						} else {
-							WonderStage[] wonderSide;
-							if (isWonderBSide) wonderSide=wonder.stagesB;
-							else wonderSide=wonder.stagesA;
-							if (numWonderStages>=wonderSide.length) System.out.println("You have already constructed all "+wonderSide.length+" stages of your wonder.");
-							else System.out.println("You do not have enough resources to construct your next wonder");
-						}
-					} else if (action==PlayerAction.CARD||action==PlayerAction.COIN) {
-						break;
-					} else if (action==PlayerAction.NUMTYPES) {
-						while (true) {
-							System.out.print("Look at (-1:neighbors 0:cardsPlayed 1-"+cards.size()+":hand)>>>");
-							try { 
-								int subAction = Integer.parseInt(System.console().readLine());
-								if (subAction==-1) {
-									System.out.println("Left");
-									System.out.println("Resources: "+left.numClay+","+left.numOre+","+left.numStone+","+left.numWood+","+left.numGlass+","+left.numLoom+","+left.numPapyrus);
-									System.out.println("           "+left.numCoin+","+left.numShield+","+left.numGear+","+left.numCompass+","+left.numTablet+","+left.numWonderStages);
-									for (Cards c:left.playedCards) System.out.print(c.name+",");
-									System.out.println();
-									System.out.println(left.resourceDescription);
-									System.out.println("Right");
-									System.out.println("Resources: "+right.numClay+","+right.numOre+","+right.numStone+","+right.numWood+","+right.numGlass+","+right.numLoom+","+right.numPapyrus);
-									System.out.println("           "+right.numCoin+","+right.numShield+","+right.numGear+","+right.numCompass+","+right.numTablet+","+right.numWonderStages);
-									for (Cards c:right.playedCards) System.out.print(c.name+",");
-									System.out.println();
-									System.out.println(right.resourceDescription);
-									break;
-								} else if (subAction==0) {
-									for (Cards c:playedCards) System.out.print(c.name+",");
-									System.out.println();
-									break;
-								} else if (subAction<=cards.size()) {
-									System.out.println(cards.get(subAction-1).getDescription());
-									break;
-								}
-							}
-							catch (NumberFormatException e) {}
-						}
-					}
-				}
-				catch (ArrayIndexOutOfBoundsException e) {}
-				catch (NumberFormatException e) {}
-			}
-			while (true) {
-				System.out.print("Choose card (1-"+cards.size()+")>>>");
-				try { 
-					cardPlayed = Integer.parseInt(System.console().readLine())-1;
-					if (cardPlayed>=0&&cardPlayed<cards.size()) {
-						if (action!=PlayerAction.CARD) break;
-						if (playableCost[cardPlayed]!=-2&&hasFreeBuild>0) {
-							System.out.print("Use free build? (1:yes 0:no)>>>");
-							try {
-								if(Integer.parseInt(System.console().readLine())==1) {
-									hasFreeBuild=0; break;
-								}
-							}
-							catch (NumberFormatException e) {}
-						}
-						if (playableCost[cardPlayed]<0) {
-							if (playedCards.contains(cards.get(cardPlayed))) System.out.println("You cannot build 2 identical structures");
-							else System.out.println("You do not have enough resources");
-						}
-						else if (playableCost[cardPlayed]>0){
-//							ArrayList<NeighborResource> a = (ArrayList<NeighborResource>)neighborResourceOptions[cardPlayed];
-//							HashSet<Integer> h = new HashSet<Integer>();
-//							for (int j=0;j<a.size();j++) {
-//								NeighborResource n = a.get(j);
-//								int lc=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
-//								int rc=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
-//								if (!h.contains(lc*100+rc)) {
-//									h.add(lc*100+rc);
-//									System.out.print(j+":"+lc+"&"+rc+" ");
-//								}
-//							}
-							System.out.print("Choose trading option (");
-							ArrayList<Integer> a = resourceOptions.get(cardPlayed);
-							for (int j=0;j<a.size();j++) {
-								System.out.print(j+":"+(a.get(j)/100)+"&"+(a.get(j)%100)+" ");
-							}
-							System.out.println(")");
-							while (true) {
-								System.out.print(">>>");
-								try {
-									int tradingOption = Integer.parseInt(System.console().readLine());
-									if (tradingOption>=0&&tradingOption<a.size()) {
-//										NeighborResource n = a.get(tradingOption);
-//										leftCost=n.leftRaw*leftTradingCostRaw+n.leftManufactured*leftTradingCostManufactured;
-//										rightCost=n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
-										leftCost=a.get(tradingOption)/100;
-										rightCost=a.get(tradingOption)%100;
-										break;
-									}
-								} catch (NumberFormatException e) {}
-							}
-							break;
-						} else break;
-					}			
-				}
-				catch (NumberFormatException e) {}
-			}
-
+		if (id==0&&Controller.manualSimulation) {
+			view.displayCards(cards,playableCost);
+			view.displayResources(this);
+			view.selectAction(this,cards);
 		} else {
 			for (int i=0;i<cards.size();i++) {
 				if (hasFreeBuild>0&&playableCost[i]!=-2) {hasFreeBuild=0;cardPlayed=i;break;}
@@ -228,22 +85,8 @@ public class Player {
 				if (canBuildWonder) action=PlayerAction.WONDER;
 				else action=PlayerAction.COIN;
 			}
+			lastCard = cards.remove(cardPlayed);
 		};
-
-		lastCard = cards.remove(cardPlayed);
-//		if (action==PlayerAction.CARD) {
-//			playedCards.add(c);
-//			numCoin-=lastCard.costCoin;
-//			applyCardEffect(lastCard,debugLog);
-//		} else if (action==PlayerAction.WONDER) {
-//			WonderStage[] wonderSide;
-//			if (isWonderBSide) wonderSide=wonder.stagesB;
-//			else wonderSide=wonder.stagesA;
-//			applyWonderEffect(wonderSide[numWonderStages],debugLog);
-//		} else if (action==PlayerAction.COIN) {
-//			numCoin+=3;
-//			if (debugLog) System.out.println("Player "+id+" discarded a card for 3 coin");
-//		}
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {
@@ -309,11 +152,9 @@ public class Player {
 				ArrayList<Integer> a = new ArrayList<Integer>(NeighborResource.getCost(k,0,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap));
 				int minCost=100;
 //				if (id==0) System.out.print(cards.get(i).name+":"+needClay+""+needOre+""+needStone+""+needWood+""+needGlass+""+needLoom+""+needPapyrus+":");
-				for (int j:a) {
-//					if (id==0) System.out.print((j/100)+" "+(j%100)+",");
-					minCost=Math.min(minCost,j/100+j%100);
-				}
-//				if (id==0) System.out.println();
+				for (int j:a) minCost=Math.min(minCost,j/100+j%100);
+//				ArrayList<Integer> b = new ArrayList<Integer>();
+//				for (int j:a) if (j/100+j%100==minCost) b.add(j);
 				resourceOptions.add(a);
 				playableCost[i]=minCost;
 			}
@@ -354,45 +195,34 @@ public class Player {
 		}
 	}
 
-	public void applyCardEffect(Cards c,boolean debugLog) {
+	public void applyCardEffect(Cards c) {
+		int dCoin=0;
 		if (c.name=="VINEYARD") {
 			int count=0;
 			for (Cards cc:playedCards) if (cc.type==CardType.BROWN) count++;
 			for (Cards cc:left.playedCards) if (cc.type==CardType.BROWN) count++;
 			for (Cards cc:right.playedCards) if (cc.type==CardType.BROWN) count++;
-			numCoin+=count;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+count+" coin");
-			return;
+			dCoin=count;
 		} else if (c.name=="HAVEN") {
 			int count=0;
 			for (Cards cc:playedCards) if (cc.type==CardType.BROWN) count++;
-			numCoin+=count;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+count+" coin");
-			return;
+			dCoin=count;
 		} else if (c.name=="BAZAR") {
 			int count=0;
 			for (Cards cc:playedCards) if (cc.type==CardType.GRAY) count++;
 			for (Cards cc:left.playedCards) if (cc.type==CardType.GRAY) count++;
 			for (Cards cc:right.playedCards) if (cc.type==CardType.GRAY) count++;
-			numCoin+=count*2;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+(count*2)+" coin");
-			return;
+			dCoin=count*2;
 		} else if (c.name=="CHAMBER OF COMMERCE") {
 			int count=0;
 			for (Cards cc:playedCards) if (cc.type==CardType.GRAY) count++;
-			numCoin+=count*2;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+(count*2)+" coin");
-			return;
+			dCoin=count*2;
 		} else if (c.name=="LIGHTHOUSE") {
 			int count=0;
 			for (Cards cc:playedCards) if (cc.type==CardType.YELLOW) count++;
-			numCoin+=count;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+count+" coin");
-			return;
+			dCoin=count;
 		} else if (c.name=="ARENA") {
-			numCoin+=numWonderStages*3;
-			if (debugLog) System.out.println("Player "+id+" played "+c.name+" for "+(numWonderStages*3)+" coin");
-			return;
+			dCoin=numWonderStages*3;
 		} else if (c.name=="CARAVANSERY") {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
 		else if (c.name=="FORUM") {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
 		else if (c.name=="MARKETPLACE") tradingCostManufactured=1;
@@ -419,20 +249,15 @@ public class Player {
 			else if (c.resourceValue==ScienceType.TABLET.ordinal()) numTablet++;
 			else if (c.resourceValue==ScienceType.COMPASS.ordinal()) numCompass++;
 		}
-		if (debugLog) System.out.println("Player "+id+" played "+c.name);
+		numCoin+=dCoin;
+		view.showCardAction(c.name,dCoin,"Player "+id);
 	}
 
-	public void applyWonderEffect(WonderStage w,boolean debugLog) {
+	public void applyWonderEffect(WonderStage w) {
 		numWonderStages++;
-		if (debugLog) System.out.print("Player "+id+" built Wonder Stage "+numWonderStages+"      ");
-		if (w.numCoin>0) {
-			numCoin+=w.numCoin;
-			if (debugLog) System.out.print("+"+w.numCoin+" COIN ");
-		}
-		if (w.numShield>0) {
-			numShield+=w.numShield;
-			if (debugLog) System.out.print("+"+w.numShield+" SHIELD ");
-		}
+		numCoin+=w.numCoin;
+		numShield+=w.numShield;
+		view.showWonderAction(w,numWonderStages,"Player "+id);
 		if (w.special==SpecialResource.RAW_MATERIALS) {int[] r={1,5,25,125};addDualResource(r);commerceDescription+="CLAY/ORE/STONE/WOOD,";}
 		else if (w.special==SpecialResource.MANUFACTURED_GOODS) {int[] r={625,3125,15625};addDualResource(r);commerceDescription+="GLASS/LOOM/PAPYRUS,";}
 		else if (w.special==SpecialResource.TRADING) {leftTradingCostRaw=1; rightTradingCostRaw=1;}
@@ -441,7 +266,6 @@ public class Player {
 		else if (w.special==SpecialResource.GUILD) canCopyGuild=true;
 		else if (w.special==SpecialResource.PLAY_LAST_CARD) canPlayLastCard=true;
 		else if (w.special==SpecialResource.PLAY_FROM_DISCARD) canPlayFromDiscard=true;
-		if (debugLog) System.out.println();
 	}
 
 	public void addDualResource(int[] r) {
@@ -529,24 +353,11 @@ public class Player {
 		ArrayList<Cards> guildChoices = new ArrayList<Cards>();
 		for (Cards c:left.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
 		for (Cards c:right.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
-		if (id==0&&Controller.debugLog) {
+		if (id==0&&Controller.manualSimulation) {
 			if (guildChoices.size()==0) {
-				System.out.println("There are no neighbouring guilds to copy");
+				view.message("There are no neighbouring guilds to copy");
 				return;
-			}
-			while (true) {
-				System.out.print("Choose a guild to copy: (");
-				for (int i=0;i<guildChoices.size();i++) System.out.print(i+":"+guildChoices.get(i).name+" ");
-				System.out.print(")>>>");
-				try {
-					int choice = Integer.parseInt(System.console().readLine());
-					if (choice>=0&&choice<guildChoices.size()) {
-						playedCards.add(guildChoices.get(choice));
-						break;
-					}
-				}
-				catch (NumberFormatException e) {}
-			}
+			} else view.selectGuild(this,guildChoices);
 		} else {
 			if (guildChoices.size()>0) playedCards.add(guildChoices.get(0));
 		}
@@ -561,34 +372,18 @@ public class Player {
 			else if (selected.contains(c)) selection.add(null);
 			else {selection.add(c); selected.add(c);}
 		}
-		if (id==0&&Controller.debugLog) {
+		if (id==0&&Controller.manualSimulation) {
 			if (selected.size()==0) {
-				System.out.println("There are no playable cards from the discard pile");
+				view.message("There are no playable cards from the discard pile");
 				return;
-			}
-			while (true) {
-				System.out.print("Choose a card from the discard pile: (");
-				for (int i=0;i<discardPile.size();i++) if (selection.get(i)!=null) System.out.print(i+":"+discardPile.get(i).name+" ");
-				System.out.print(")>>>");
-				try {
-					int choice = Integer.parseInt(System.console().readLine());
-					if (choice>=0&&choice<discardPile.size()&&selection.get(choice)!=null) {
-						System.out.println("Extra turn playing from discard");
-						Cards c=discardPile.remove(choice);
-						playedCards.add(c);
-						applyCardEffect(c,Controller.debugLog);
-						break;
-					}
-				}
-				catch (NumberFormatException e) {}
-			}
+			} else view.selectFromDiscard(this,discardPile,selection);
 		} else {
 			if (selected.size()>0) {
 				for (int i=0;i<discardPile.size();i++){
 					if (selection.get(i)!=null) {
 						Cards c = discardPile.remove(i);
 						playedCards.add(c);
-						applyCardEffect(c,Controller.debugLog);
+						applyCardEffect(c);
 						break;
 					}
 				}

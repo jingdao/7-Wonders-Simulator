@@ -7,6 +7,7 @@ import model.Player;
 import model.PlayerAction;
 import model.WonderStage;
 import model.ResourceType;
+import view.CommandLine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -14,14 +15,19 @@ import java.util.Random;
 public class Controller {
 
 	public Random random;
-	public static boolean debugLog=true;
+	public CommandLine com;
+	public static boolean manualSimulation=true;
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 
 	public Controller() {
 		random = new Random();
 		Cards.buildDependencyMap();
-		if (debugLog) newGame(7);
+		if (manualSimulation) {
+			com = new CommandLine(true);
+			newGame(7);
+		} else com = new CommandLine(false);
+
 	}
 
 	public void newGame(int numPlayers) {
@@ -30,8 +36,7 @@ public class Controller {
 		Player[] p = new Player[numPlayers];
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
-		//w[0]=Wonder.Alexandria;
-		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i]);
+		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i],com);
 		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
 		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
 		for (Player pp:p) {
@@ -44,7 +49,7 @@ public class Controller {
 			else if (pp.wonder.startingResource==ResourceType.PAPYRUS) {int[] r={15625};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
 		}
 		for (int age=1;age<=3;age++) {
-			if (debugLog) System.out.println("Age "+age);
+			com.displayAge(age);
 			shuffleCards(c,age);
 			ArrayList<Cards>[] cc = new ArrayList[numPlayers];
 			for (int j=0;j<numPlayers;j++) {
@@ -53,11 +58,11 @@ public class Controller {
 				if (p[j].hasFreeBuild==0) p[j].hasFreeBuild=1;
 			}
 			for (int j=0;j<6;j++) {
-				if (debugLog) System.out.println("Turn "+(j+1));
+				com.displayTurn(j+1);
 				for(int k=0;k<numPlayers;k++) {
-//					System.out.println("Player "+(k+1));
-					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers],debugLog);
-					else p[k].getAction(cc[(k+j)%numPlayers],debugLog);
+					com.displayPlayerName(""+k);
+					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers]);
+					else p[k].getAction(cc[(k+j)%numPlayers]);
 				}
 				for (Player pp:p) resolvePlayerOutcome(pp,discardPile);
 				if (j!=5) for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
@@ -68,15 +73,13 @@ public class Controller {
 				else remainingCards=cc[(k+5)%numPlayers];
 				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
 				else {
-					if (debugLog) System.out.println("Extra turn from wonder effect");
-					p[k].getAction(remainingCards,debugLog);
+					com.message("Extra turn from wonder effect");
+					p[k].getAction(remainingCards);
 					resolvePlayerOutcome(p[k],discardPile);
 				}
 			}
 			for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
-//			System.out.print("Discard pile: ");
-//			for (Cards d:discardPile) System.out.print(d.name+",");
-//			System.out.println();
+			com.displayDiscardPile(discardPile);
 			int[] warResult = new int[numPlayers];
 			for (int j=0;j<numPlayers-1;j++) {
 				if (p[j].numShield>p[j+1].numShield) {
@@ -94,13 +97,7 @@ public class Controller {
 				p[numPlayers-1].victoryToken+=2*age-1;p[0].defeatToken++;
 				warResult[numPlayers-1]+=2*age-1;warResult[0]--;
 			}
-			if (debugLog) {
-				System.out.print("War results: (");
-				for (int j=0;j<numPlayers;j++) System.out.print(p[j].numShield+",");
-				System.out.print(") (");
-				for (int j=0;j<numPlayers;j++) System.out.print(warResult[j]+",");
-				System.out.println(")");
-			}
+			com.displayWarResults(p,warResult);
 		}
 		for (Player pp:p) if (pp.canCopyGuild) pp.copyGuild();
 		countScore(p);
@@ -111,12 +108,12 @@ public class Controller {
 		ArrayList<Wonder> wonders = new ArrayList<Wonder>();
 		wonders.addAll(Arrays.asList(Wonder.wonders));
 		for (int i=0;i<numPlayers;i++) {
-			if (debugLog) {
+			if (manualSimulation) {
 				int j=random.nextInt(wonders.size());
 				w[i]=wonders.remove(j);
-				System.out.println(w[i].name);
 			} else w[i]=wonders.remove(0);
 		}
+		com.displayWonders(w);
 
 	}
 
@@ -154,7 +151,6 @@ public class Controller {
 			for (int k=0;k<7;k++) {
 				int j=random.nextInt(ls.size());
 				c[i][k]=ls.remove(j);
-//				System.out.println(i+" "+c[i][k].name);
 			}
 		}
 	}
@@ -163,27 +159,27 @@ public class Controller {
 		if (pp.leftCost>0) {
 			pp.numCoin-=pp.leftCost;
 			pp.left.numCoin+=pp.leftCost;
-			if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.leftCost+" coin to Player "+pp.left.id);
+			com.displayPayment("Player "+pp.id,"Player "+pp.left.id,pp.leftCost);
 		}
 		if (pp.rightCost>0) {
 			pp.numCoin-=pp.rightCost;
 			pp.right.numCoin+=pp.rightCost;
-			if (debugLog) System.out.println("Player "+pp.id+" payed "+pp.rightCost+" coin to Player "+pp.right.id);
+			com.displayPayment("Player "+pp.id,"Player "+pp.right.id,pp.rightCost);
 		}
 		if (pp.action==PlayerAction.CARD) {
 			pp.numCoin-=pp.lastCard.costCoin;
 			pp.playedCards.add(pp.lastCard);
-			pp.applyCardEffect(pp.lastCard,debugLog);
+			pp.applyCardEffect(pp.lastCard);
 		} else if (pp.action==PlayerAction.WONDER) {
 			WonderStage[] wonderSide;
 			if (pp.isWonderBSide) wonderSide=pp.wonder.stagesB;
 			else wonderSide=pp.wonder.stagesA;
-			pp.applyWonderEffect(wonderSide[pp.numWonderStages],debugLog);
+			pp.applyWonderEffect(wonderSide[pp.numWonderStages]);
 		}
 		else if (pp.action==PlayerAction.COIN) {
 			discardPile.add(pp.lastCard);
 			pp.numCoin+=3;
-			if (debugLog) System.out.println("Player "+pp.id+" discarded a card for 3 coin");
+			com.showDiscardAction("Player "+pp.id);
 		}
 	}
 
@@ -191,54 +187,58 @@ public class Controller {
 		int highScore=0;
 		int highestCoin=0;
 		ArrayList<Integer> winner = new ArrayList<Integer>();
-		if (debugLog) System.out.println("Player | BROWN GRAY YELLOW BLUE GREEN RED PURPLE | VICTORY DEFEAT");
-		else lastScore=new ArrayList<Integer>();
+		lastScore=new ArrayList<Integer>();
 		for (Player pp:p) {
 			pp.countCards();
-			if (debugLog) System.out.printf("%6d | %5d %4d %6d %4d %5d %3d %6d | %7d %6d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
-		if (debugLog) System.out.println("Player | Military Coin Wonder Civilian Science Commercial Guild | Total");
+		int[] militaryScore=new int[p.length],
+			  coinScore=new int[p.length],
+			  wonderScore=new int[p.length],
+			  civilianScore=new int[p.length],
+			  scienceScore=new int[p.length],
+			  commercialScore=new int[p.length],
+			  guildScore=new int[p.length];
+		int[][] scoreCategories = {militaryScore,coinScore,wonderScore,civilianScore,scienceScore,commercialScore,guildScore};
 		for (int i=0;i<p.length;i++) {
-			int militaryScore=0,coinScore=0,wonderScore=0,civilianScore=0,scienceScore=0,commercialScore=0,guildScore=0,totalScore;
-			militaryScore=p[i].victoryToken-p[i].defeatToken;
-			coinScore=p[i].numCoin/3;
+			int totalScore;
+			militaryScore[i]=p[i].victoryToken-p[i].defeatToken;
+			coinScore[i]=p[i].numCoin/3;
 			WonderStage[] wonderSide;
 			if (p[i].isWonderBSide) wonderSide=p[i].wonder.stagesB;
 			else wonderSide=p[i].wonder.stagesA;
-			for (int j=0;j<p[i].numWonderStages;j++) wonderScore+=wonderSide[j].numVictory;
+			for (int j=0;j<p[i].numWonderStages;j++) wonderScore[i]+=wonderSide[j].numVictory;
 			for (Cards c:p[i].playedCards) {
-				if (c.type==CardType.BLUE) civilianScore+=c.resourceValue;
+				if (c.type==CardType.BLUE) civilianScore[i]+=c.resourceValue;
 				else if (c.name=="HAVEN") {
-					commercialScore+=p[i].numBrown;
+					commercialScore[i]+=p[i].numBrown;
 				} else if (c.name=="LIGHTHOUSE") {
-					commercialScore+=p[i].numYellow;
+					commercialScore[i]+=p[i].numYellow;
 				} else if (c.name=="CHAMBER OF COMMERCE") {
-					commercialScore+=p[i].numGray*2;
-				} else if (c.name=="ARENA") commercialScore+=p[i].numWonderStages;
+					commercialScore[i]+=p[i].numGray*2;
+				} else if (c.name=="ARENA") commercialScore[i]+=p[i].numWonderStages;
 				else if (c.name=="WORKERS GUILD") {
-					guildScore+=p[i].left.numBrown+p[i].right.numBrown;
+					guildScore[i]+=p[i].left.numBrown+p[i].right.numBrown;
 				} else if (c.name=="CRAFTSMENS GUILD") {
-					guildScore+=p[i].left.numGray+p[i].right.numGray;
+					guildScore[i]+=p[i].left.numGray+p[i].right.numGray;
 				} else if (c.name=="TRADERS GUILD") {
-					guildScore+=p[i].left.numYellow+p[i].right.numYellow;
+					guildScore[i]+=p[i].left.numYellow+p[i].right.numYellow;
 				} else if (c.name=="PHILOSOPHERS GUILD") {
-					guildScore+=p[i].left.numGreen+p[i].right.numGreen;
+					guildScore[i]+=p[i].left.numGreen+p[i].right.numGreen;
 				} else if (c.name=="SPY GUILD") {
-					guildScore+=p[i].left.numRed+p[i].right.numRed;
+					guildScore[i]+=p[i].left.numRed+p[i].right.numRed;
 				} else if (c.name=="MAGISTRATES GUILD") {
-					guildScore+=p[i].left.numBlue+p[i].right.numBlue;
+					guildScore[i]+=p[i].left.numBlue+p[i].right.numBlue;
 				} else if (c.name=="SHIPOWNERS GUILD") {
-					guildScore+=p[i].numBrown+p[i].numGray+p[i].numBlue;
+					guildScore[i]+=p[i].numBrown+p[i].numGray+p[i].numBlue;
 				} else if (c.name=="STRATEGY GUILD") {
-					guildScore+=p[i].left.defeatToken+p[i].right.defeatToken;
+					guildScore[i]+=p[i].left.defeatToken+p[i].right.defeatToken;
 				} else if (c.name=="BUILDERS GUILD") {
-					guildScore+=p[i].numWonderStages+p[i].left.numWonderStages+p[i].right.numWonderStages;
+					guildScore[i]+=p[i].numWonderStages+p[i].left.numWonderStages+p[i].right.numWonderStages;
 				}
 			}
-			scienceScore=getMaxScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet,p[i].numVariableScience);
-			totalScore = militaryScore+coinScore+wonderScore+civilianScore+scienceScore+commercialScore+guildScore;
-			if (debugLog) System.out.printf("%6d | %8d %4d %6d %8d %7d %10d %5d | %5d\n",i,militaryScore,coinScore,wonderScore,civilianScore,scienceScore,commercialScore,guildScore,totalScore);
-			else lastScore.add(totalScore);
+			scienceScore[i]=getMaxScienceScore(p[i].numGear,p[i].numCompass,p[i].numTablet,p[i].numVariableScience);
+			totalScore = militaryScore[i]+coinScore[i]+wonderScore[i]+civilianScore[i]+scienceScore[i]+commercialScore[i]+guildScore[i];
+			lastScore.add(totalScore);
 			if (totalScore>highScore||totalScore==highScore&&p[i].numCoin>highestCoin) {
 				highScore=totalScore;
 				highestCoin=p[i].numCoin;
@@ -246,16 +246,8 @@ public class Controller {
 				winner.add(i);
 			} else if (totalScore==highScore&&p[i].numCoin==highestCoin) winner.add(i);
 		}
-		if (debugLog) {
-			if (winner.size()==1) System.out.println("The winner is Player "+winner.get(0)+"!");
-			else {
-				System.out.print("The winners are");
-				for (Integer i:winner) {
-					System.out.print(" Player "+i);
-				}
-				System.out.println("!");
-			}
-		} else lastWinner=winner;
+		if (!manualSimulation) lastWinner=winner;
+		com.displayScore(p,winner,lastScore,scoreCategories);
 	}
 
 	public int getMaxScienceScore(int numGear,int numCompass,int numTablet,int numVariableScience) {
@@ -286,6 +278,5 @@ public class Controller {
 
 	public static void main(String[] args ) {
 		Controller con = new Controller();
-
 	}
 }

@@ -2,6 +2,8 @@ images
 bin
 src/controller/*
 src/model/*
+src/view/*
 **/*.swp
 !src/controller/*.java
 !src/model/*.java
+!src/view/*.java

@@ -12,7 +12,7 @@ Commmand line:
 
 Simulation results:
 
-	(N=10000 T=5 MINS)
+	(N=10000 T=5 MINS, shared wins also counted)
 	
 	Side A 
 	Wonder        |  Avg StdDev Wins
