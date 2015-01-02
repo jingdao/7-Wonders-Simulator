@@ -8,6 +8,7 @@ import model.PlayerAction;
 import model.WonderStage;
 import model.ResourceType;
 import view.CommandLine;
+import view.CardView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -15,18 +16,19 @@ import java.util.Random;
 public class Controller {
 
 	public Random random;
-	public CommandLine com;
+	public CardView com;
 	public static boolean manualSimulation=true;
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 
-	public Controller() {
+	public Controller(CardView cv) {
 		random = new Random();
 		Cards.buildDependencyMap();
+		if (cv!=null) com=cv;
 		if (manualSimulation) {
-			com = new CommandLine(true);
+			if (cv==null) com = new CommandLine(true);
 			newGame(7);
-		} else com = new CommandLine(false);
+		} else if (cv==null) com = new CommandLine(false);
 
 	}
 
@@ -277,6 +279,6 @@ public class Controller {
 	}
 
 	public static void main(String[] args ) {
-		Controller con = new Controller();
+		Controller con = new Controller(null);
 	}
 }

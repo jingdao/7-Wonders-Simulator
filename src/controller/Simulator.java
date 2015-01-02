@@ -8,7 +8,7 @@ public class Simulator {
 
 	public Simulator() {
 		Controller.manualSimulation=false;
-		con = new Controller();
+		con = new Controller(null);
 		simulateRandom(1000);
 	}
 

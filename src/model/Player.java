@@ -134,9 +134,6 @@ public class Player {
 			needGlass=Math.max(0,needGlass-numGlass);
 			needLoom=Math.max(0,needLoom-numLoom);
 			needPapyrus=Math.max(0,needPapyrus-numPapyrus);
-//			if (id==0) System.out.println(needClay+","+needOre+","+needStone+","+needWood+","+needGlass+","+needLoom+","+needPapyrus);
-//			if (needGlass+needLoom+needPapyrus>numManufacturedGoods) continue;
-//			if (needClay+needOre+needStone+needWood>numRawMaterials) continue;
 			int k=needClay+needOre*5+needStone*25+needWood*125+needGlass*625+needLoom*3125+needPapyrus*15625;
 			if (k==0) {playableCost[i]=0; resourceOptions.add(null);}
 			else if (!resourceMap.containsKey(k)) {playableCost[i]=-1; resourceOptions.add(null);}

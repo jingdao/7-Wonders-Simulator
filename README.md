@@ -4,7 +4,7 @@
 Commmand line:
 
 	# Building
-	javac -d bin src/controller/* src/model/
+	javac -d bin src/controller/* src/model/* src/view/*
 	# Manual Simulation with debug printouts
 	java -cp bin controller.Controller 
 	# Automatic simulation
