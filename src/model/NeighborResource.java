@@ -54,18 +54,21 @@ public class NeighborResource {
 		}
 	}
 
-	public static HashSet<Integer> getCost(int resourceCode, int pid, int leftTradingCostRaw, int rightTradingCostRaw, int tradingCostManufactured,
-							 HashMap<Integer,ArrayList<NeighborResource>> resourceMap) {
+	public static HashSet<Integer> getCost(int resourceCode, int leftTradingCostRaw, int rightTradingCostRaw, int tradingCostManufactured,
+							 HashMap<Integer,ArrayList<NeighborResource>> resourceMap,HashSet<Integer> pid) {
+//		System.out.println(getStringFromResourceCode(resourceCode)+":"+pid);
 		HashSet<Integer> set = new HashSet<Integer>();
 		ArrayList<NeighborResource> a = resourceMap.get(resourceCode);
 		if (a==null) return null;
 		for (NeighborResource n:a) {
-			if (n.id==pid) continue;
+			if (pid.contains(n.id)) continue;
 			int currentCost=(n.leftRaw*leftTradingCostRaw+n.leftManufactured*tradingCostManufactured)*100+
 							(n.rightRaw*rightTradingCostRaw+n.rightManufactured*tradingCostManufactured);
 			if (n.prerequisite==0) set.add(currentCost);
 			else {
-				HashSet<Integer> h = getCost(n.prerequisite,n.id,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap);
+				HashSet<Integer> newId = new HashSet<Integer>(pid);
+				newId.add(n.id);
+				HashSet<Integer> h = getCost(n.prerequisite,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap,newId);
 				if (h!=null) for (int i:h) set.add(i+currentCost);
 				else set.add(currentCost);
 			}

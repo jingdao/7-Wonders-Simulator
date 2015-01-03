@@ -80,7 +80,7 @@ public class Cards {
 	public static Cards Academy = new Cards("ACADEMY",0,0,3,0,1,0,0,0,CardType.GREEN,ResourceType.SCIENCE,ScienceType.COMPASS.ordinal(),"SCHOOL");
 	public static Cards Study = new Cards("STUDY",0,0,0,1,0,1,1,0,CardType.GREEN,ResourceType.SCIENCE,ScienceType.GEAR.ordinal(),"SCHOOL");
 	public static Cards Workersguild = new Cards("WORKERS GUILD",1,2,1,1,0,0,0,0,CardType.PURPLE,ResourceType.GUILD,0,null);
-	public static Cards Craftsmensguild = new Cards("CRAFTSMENS GUILD",0,2,2,0,0,0,0,0,CardType.PURPLE,ResourceType.GUILD,0,null);
+	public static Cards Craftmensguild = new Cards("CRAFTMENS GUILD",0,2,2,0,0,0,0,0,CardType.PURPLE,ResourceType.GUILD,0,null);
 	public static Cards Tradersguild = new Cards("TRADERS GUILD",0,0,0,0,1,1,1,0,CardType.PURPLE,ResourceType.GUILD,0,null);
 	public static Cards Philosophersguild = new Cards("PHILOSOPHERS GUILD",3,0,0,0,0,1,1,0,CardType.PURPLE,ResourceType.GUILD,0,null);
 	public static Cards Spyguild = new Cards("SPY GUILD",3,0,0,0,1,0,0,0,CardType.PURPLE,ResourceType.GUILD,0,null);
@@ -112,7 +112,7 @@ public class Cards {
 	public static Cards[] age3group5={Townhall,Senate,Arena,Circus,Siegeworkshop,Study};
 	public static Cards[] age3group6={Pantheon,Townhall,Lighthouse,Chamberofcommerce,Circus,Lodge};
 	public static Cards[] age3group7={Palace,Arena,Fortifications,Arsenal,Observatory,Academy};
-	public static Cards[] age3guilds={Workersguild,Craftsmensguild,Tradersguild,Philosophersguild,Spyguild,Strategyguild,Shipownersguild,Scientistsguild,Magistratesguild,Buildersguild};
+	public static Cards[] age3guilds={Workersguild,Craftmensguild,Tradersguild,Philosophersguild,Spyguild,Strategyguild,Shipownersguild,Scientistsguild,Magistratesguild,Buildersguild};
 
 	public static HashMap<String,String[]> dependencyMap;
 	

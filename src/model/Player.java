@@ -146,7 +146,7 @@ public class Player {
 //								n.rightRaw*rightTradingCostRaw+n.rightManufactured*rightTradingCostManufactured;
 //					playableCost[i]=Math.min(playableCost[i],cost);
 //				}
-				ArrayList<Integer> a = new ArrayList<Integer>(NeighborResource.getCost(k,0,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap));
+				ArrayList<Integer> a = new ArrayList<Integer>(NeighborResource.getCost(k,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap,new HashSet<Integer>()));
 				int minCost=100;
 //				if (id==0) System.out.print(cards.get(i).name+":"+needClay+""+needOre+""+needStone+""+needWood+""+needGlass+""+needLoom+""+needPapyrus+":");
 				for (int j:a) minCost=Math.min(minCost,j/100+j%100);
@@ -182,7 +182,7 @@ public class Player {
 		else if (!resourceMap.containsKey(k)) return false;
 		else if (resourceMap.get(k)==null) return true;
 		else {
-			wonderOptions=new ArrayList<Integer>(NeighborResource.getCost(k,0,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap));
+			wonderOptions=new ArrayList<Integer>(NeighborResource.getCost(k,leftTradingCostRaw,rightTradingCostRaw,tradingCostManufactured,resourceMap,new HashSet<Integer>()));
 			int minCost=100;
 			for (int i:wonderOptions) {
 				minCost=Math.min(minCost,i/100+i%100);

@@ -7,11 +7,13 @@ import model.Player;
 import model.PlayerAction;
 import model.WonderStage;
 import model.ResourceType;
+import model.NeighborResource;
 import view.CommandLine;
 import view.CardView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.HashSet;
 
 public class Controller {
 
@@ -28,6 +30,30 @@ public class Controller {
 		if (manualSimulation) {
 			if (cv==null) com = new CommandLine(true);
 			newGame(7);
+//			Player p1 = new Player(1,Wonder.Rhodes,com);
+//			int[] d = {5};
+//			p1.addNeighborResource(d,true,true);
+//			int[] g = {5};
+//			p1.addNeighborResource(g,false,true);
+//			p1.addDualResource(c);
+//			for (Integer j:p1.resourceMap.keySet()) {
+//				String s="";
+//				int ii=j;
+//				for (int i=0;i<7;i++) {
+//					s+=(ii%5)+",";
+//					ii=ii/5;
+//				}
+//				System.out.print(s+":");
+//				if (p1.resourceMap.get(j)!=null) {
+//					for (NeighborResource n:p1.resourceMap.get(j)) {
+//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+":"+n.id+",");
+//					}
+//				}
+//				System.out.println();
+//			}
+//			for (Integer j:NeighborResource.getCost(15,2,2,2,p1.resourceMap,new HashSet<Integer>())) {
+//				System.out.println((j/100)+" "+(j%100));
+//			}
 		} else if (cv==null) com = new CommandLine(false);
 
 	}
