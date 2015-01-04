@@ -46,10 +46,11 @@ public class SevenWonders extends Activity implements CardView {
 	ArrayList<View> cardViews;
 	ArrayList<View> descriptionIcons;
 	ImageView cardDescription;
-	TextView cardDescriptionText,ageText,turnText;
+	TextView cardDescriptionText,ageText,turnText,idText,nameText;
 	Button playButton;
 	AbsoluteLayout al;
 	int topMargin=30;
+	String resourceString="",commerceString="";
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,7 +62,7 @@ public class SevenWonders extends Activity implements CardView {
 		height = display.getHeight()-getStatusBarHeight();
 		
 		al = (AbsoluteLayout) findViewById(R.id.layout1);
-		displayCardIcon();
+//		displayCardIcon();
 		displayResourceIcon();
 		displayDescriptionIcons();
 		Controller.manualSimulation=true;
@@ -87,8 +88,11 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void displayResources(Player pp) {
 		p=pp;
+		final Activity cv = this;
 		handler.post(new Runnable(){
 			public void run() {
+				idText.setText("Player "+p.id);
+				nameText.setText(p.wonder.name);
 				coinText.setText(""+p.numCoin);
 				clayText.setText(""+p.numClay);
 				oreText.setText(""+p.numOre);
@@ -99,6 +103,30 @@ public class SevenWonders extends Activity implements CardView {
 				papyrusText.setText(""+p.numPapyrus);
 				shieldText.setText(""+p.numShield);
 				wonderText.setText(""+p.numWonderStages);
+				if (p.resourceDescription.length()>resourceString.length()) {
+					Resources res = getResources();
+					for (String s:p.resourceDescription.substring(resourceString.length(),p.resourceDescription.length()).split(",")) {
+						resourceString+=s+",";
+						int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
+						ImageView i1 = new ImageView(cv);
+						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()-24)*35));
+						i1.setImageResource(vid);
+						al.addView(i1);
+						resourceIcons.add(i1);
+					}
+				}
+				if (p.commerceDescription.length()>commerceString.length()) {
+					Resources res = getResources();
+					for (String s:p.commerceDescription.substring(commerceString.length(),p.commerceDescription.length()).split(",")) {
+						commerceString+=s+",";
+						int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
+						ImageView i1 = new ImageView(cv);
+						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()-24)*35));
+						i1.setImageResource(vid);
+						al.addView(i1);
+						resourceIcons.add(i1);
+					}
+				}
 			}
 		});
 	}
@@ -185,32 +213,44 @@ public class SevenWonders extends Activity implements CardView {
 		wonderText.setLayoutParams(new AbsoluteLayout.LayoutParams(30,30,40,topMargin+315));
 		wonderText.setTextColor(Color.BLACK);
 		al.addView(wonderText);
+		idText = new TextView(this);
+		idText.setTextColor(Color.BLACK);
+		idText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/4,topMargin,0,0));
+		idText.setGravity(Gravity.CENTER);
+		al.addView(idText);
+		nameText = new TextView(this);
+		nameText.setTextColor(Color.BLACK);
+		nameText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/4,topMargin,width/4,0));
+		nameText.setGravity(Gravity.CENTER);
+		al.addView(nameText);
 		ageText = new TextView(this);
 		ageText.setTextColor(Color.BLACK);
-		ageText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/2,topMargin,0,0));
+		ageText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/4,topMargin,width/2,0));
+		ageText.setGravity(Gravity.CENTER);
 		al.addView(ageText);
 		turnText = new TextView(this);
 		turnText.setTextColor(Color.BLACK);
-		turnText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/2,topMargin,width/2,0));
+		turnText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/4,topMargin,width/4*3,0));
+		turnText.setGravity(Gravity.CENTER);
 		al.addView(turnText);
-		Button btn1 = new Button(this);
-		btn1.setText("Wonder");
-		btn1.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin));
-		btn1.setOnClickListener(new OnClickListener() {	 
-			public void onClick(View arg0) {
-				System.out.println("Wonder");
-			}
-		});
-		al.addView(btn1);
-		Button btn2 = new Button(this);
-		btn2.setText("Discard");
-		btn2.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin+55));
-		btn2.setOnClickListener(new OnClickListener() {	 
-			public void onClick(View arg0) {
-				System.out.println("Discard");
-			}
-		});
-		al.addView(btn2);
+//		Button btn1 = new Button(this);
+//		btn1.setText("Wonder");
+//		btn1.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin));
+//		btn1.setOnClickListener(new OnClickListener() {	 
+//			public void onClick(View arg0) {
+//				System.out.println("Wonder");
+//			}
+//		});
+//		al.addView(btn1);
+//		Button btn2 = new Button(this);
+//		btn2.setText("Discard");
+//		btn2.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin+55));
+//		btn2.setOnClickListener(new OnClickListener() {	 
+//			public void onClick(View arg0) {
+//				System.out.println("Discard");
+//			}
+//		});
+//		al.addView(btn2);
 		resourceIcons.add(i1);
 		resourceIcons.add(i2);
 		resourceIcons.add(i3);
@@ -229,11 +269,14 @@ public class SevenWonders extends Activity implements CardView {
 		resourceIcons.add(glassText);
 		resourceIcons.add(loomText);
 		resourceIcons.add(papyrusText);
-		resourceIcons.add(ageText);
-		resourceIcons.add(turnText);
 		resourceIcons.add(shieldText);
 		resourceIcons.add(wonderText);
-		resourceIcons.add(btn1);
+		resourceIcons.add(idText);
+		resourceIcons.add(nameText);
+		resourceIcons.add(ageText);
+		resourceIcons.add(turnText);
+//		resourceIcons.add(btn1);
+//		resourceIcons.add(btn2);
 	}
 
 	public void displayCardIcon() {
@@ -268,24 +311,43 @@ public class SevenWonders extends Activity implements CardView {
 		final Activity cv = this;
 		handler.post(new Runnable(){
 			public void run() {
+				int cardWidth=width/2;
+				int cardHeight=70;
+				cardViews=new ArrayList<View>();
 				int numCards=cards.size();
 				for (int i=0;i<numCards;i++) {
+					final int j=i;
+					ImageView iv = new ImageView(cv);
+					iv.setLayoutParams(new AbsoluteLayout.LayoutParams(cardWidth,cardHeight,cardWidth/2,topMargin+cardHeight*i));
+					iv.setOnClickListener(new OnClickListener(){
+						public void onClick(View arg0) {
+							displayCardDescription(j);
+						}
+					});
+					al.addView(iv);
+					cardViews.add(iv);
 					Resources res = getResources();
 		//			int id = res.getIdentifier("imageView"+i, "id", getApplicationContext().getPackageName());
 					int vid = res.getIdentifier(cards.get(i).name.toLowerCase().replaceAll(" ","_"), "drawable", getApplicationContext().getPackageName());
 		//			ImageView iv = (ImageView) findViewById(id);
 		//			iv.setScaleType(ImageView.ScaleType.FIT_XY);
-					System.out.println(i+" "+cards.get(i).name);
-					ImageView iv = (ImageView) cardViews.get(i);
-					if (iv.getDrawable()!=null) ((BitmapDrawable)iv.getDrawable()).getBitmap().recycle();
+//					ImageView iv = (ImageView) cardViews.get(i);
+//					if (iv.getDrawable()!=null) ((BitmapDrawable)iv.getDrawable()).getBitmap().recycle();
+//					iv.setImageDrawable(null);
 					iv.setImageResource(vid);
-					iv.setVisibility(View.VISIBLE);
-//					if (playableCost[i]!=0) {
+//					iv.setVisibility(View.VISIBLE);
+					if (playableCost[i]!=0) {
 //						TextView tv = (TextView) cardViews.get(i+7);
-//						if (playableCost[i]<0) tv.setText("x");
-//						else if (playableCost[i]>0) tv.setText(""+playableCost[i]);
+						TextView tv = new TextView(cv);
+						if (playableCost[i]<0) tv.setText("x");
+						else if (playableCost[i]>0) tv.setText(""+playableCost[i]);
+						tv.setTextColor(Color.BLACK);
+						tv.setLayoutParams(new AbsoluteLayout.LayoutParams(30,cardHeight,width/4*3,topMargin+cardHeight*i));
+						tv.setGravity(Gravity.CENTER);
 //						tv.setVisibility(View.VISIBLE);
-//					}
+						al.addView(tv);
+						cardViews.add(tv);
+					}
 				}
 			}
 		});
@@ -295,39 +357,65 @@ public class SevenWonders extends Activity implements CardView {
 		descriptionIcons = new ArrayList<View>();
 		playButton = new Button(this);
 		playButton.setText("Play");
-		playButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/4-40,height/8*7-25));
+		playButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8-40,height/8*7-25));
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
 				p.lastCard=cards.remove(currentCard);
-//				for (View v:cardViews) v.setVisibility(View.INVISIBLE);
+//				for (View v:cardViews) v.setVisibility(View.GONE);
+				for (View v:cardViews) al.removeView(v);
 				for (View v:descriptionIcons) v.setVisibility(View.GONE);
 				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+				al.removeView(cardDescription);
 				synchronized(lock) {
 					lock.notify();
 				}
 			}
 		});
-		playButton.setEnabled(false);
 		al.addView(playButton);
 		descriptionIcons.add(playButton);
+		Button wonderButton = new Button(this);
+		wonderButton.setText("Wonder");
+		wonderButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8*3-40,height/8*7-25));
+		wonderButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View arg0) {
+				for (View v:descriptionIcons) v.setVisibility(View.GONE);
+				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+				for (int i=0;i<cards.size();i++) cardViews.get(i).setVisibility(View.VISIBLE);
+				al.removeView(cardDescription);
+			}
+		});
+		al.addView(wonderButton);
+		descriptionIcons.add(wonderButton);
+		Button discardButton = new Button(this);
+		discardButton.setText("Discard");
+		discardButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8*5-40,height/8*7-25));
+		discardButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View arg0) {
+				for (View v:descriptionIcons) v.setVisibility(View.GONE);
+				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+				for (int i=0;i<cards.size();i++) cardViews.get(i).setVisibility(View.VISIBLE);
+				al.removeView(cardDescription);
+			}
+		});
+		al.addView(discardButton);
+		descriptionIcons.add(discardButton);
 		Button backButton = new Button(this);
 		backButton.setText("Back");
-		backButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/4*3-40,height/8*7-25));
+		backButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8*7-40,height/8*7-25));
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
 				for (View v:descriptionIcons) v.setVisibility(View.GONE);
 				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-				for (View v:cardViews) v.setVisibility(View.VISIBLE);
-//				displayResources(p);
-//				displayCards(cards,playableCost);
+				for (int i=0;i<cards.size();i++) cardViews.get(i).setVisibility(View.VISIBLE);
+				al.removeView(cardDescription);
 			}
 		});
 		al.addView(backButton);
 		descriptionIcons.add(backButton);
-		cardDescription = new ImageView(this);
-		cardDescription.setLayoutParams(new AbsoluteLayout.LayoutParams(width,height/2,0,0));
-		al.addView(cardDescription);
-		descriptionIcons.add(cardDescription);
+//		cardDescription = new ImageView(this);
+//		cardDescription.setLayoutParams(new AbsoluteLayout.LayoutParams(width,height/2,0,0));
+//		al.addView(cardDescription);
+//		descriptionIcons.add(cardDescription);
 		cardDescriptionText = new TextView(this);
 		cardDescriptionText.setTextColor(Color.BLACK);
 		cardDescriptionText.setLayoutParams(new AbsoluteLayout.LayoutParams(width,height/4,0,height/2));
@@ -341,7 +429,12 @@ public class SevenWonders extends Activity implements CardView {
 		Cards c = cards.get(i);
 		Resources res = getResources();
 		int vid = res.getIdentifier(c.name.toLowerCase().replaceAll(" ","_"), "drawable", getApplicationContext().getPackageName());
-		if (cardDescription.getDrawable()!=null) ((BitmapDrawable)cardDescription.getDrawable()).getBitmap().recycle();
+//		if (cardDescription.getDrawable()!=null) ((BitmapDrawable)cardDescription.getDrawable()).getBitmap().recycle();
+//		cardDescription.setImageDrawable(null);
+		cardDescription = new ImageView(this);
+		cardDescription.setLayoutParams(new AbsoluteLayout.LayoutParams(width,height/2,0,0));
+		al.addView(cardDescription);
+//		descriptionIcons.add(cardDescription);
 		cardDescription.setImageResource(vid);
 		String s = c.getDescription();
 		playButton.setEnabled(false);
@@ -352,90 +445,6 @@ public class SevenWonders extends Activity implements CardView {
 		for (View v:cardViews) v.setVisibility(View.GONE);
 		for (View v:resourceIcons) v.setVisibility(View.GONE);
 		for (View v:descriptionIcons) v.setVisibility(View.VISIBLE);
-	}
-
-	public void newGame(int numPlayers) {
-		Wonder[] w = new Wonder[numPlayers];
-		Cards[][] c=new Cards[numPlayers][7];
-		Player[] p = new Player[numPlayers];
-		ArrayList<Cards> discardPile = new ArrayList<Cards>();
-		con.shuffleWonders(w);
-		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i],this);
-		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
-		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
-		for (Player pp:p) {
-			if (pp.wonder.startingResource==ResourceType.CLAY) {int[] r={1};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
-			else if (pp.wonder.startingResource==ResourceType.ORE) {int[] r={5};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
-			else if (pp.wonder.startingResource==ResourceType.STONE) {int[] r={25};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
-			else if (pp.wonder.startingResource==ResourceType.WOOD) {int[] r={125};pp.left.addNeighborResource(r,false,true);pp.right.addNeighborResource(r,true,true);}
-			else if (pp.wonder.startingResource==ResourceType.GLASS) {int[] r={625};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
-			else if (pp.wonder.startingResource==ResourceType.LOOM) {int[] r={3125};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
-			else if (pp.wonder.startingResource==ResourceType.PAPYRUS) {int[] r={15625};pp.left.addNeighborResource(r,false,false);pp.right.addNeighborResource(r,true,false);}
-		}
-		for (int age=1;age<=3;age++) {
-			con.shuffleCards(c,age);
-			ArrayList<Cards>[] cc = new ArrayList[numPlayers];
-			for (int j=0;j<numPlayers;j++) {
-				cc[j]=new ArrayList<Cards>();
-				cc[j].addAll(Arrays.asList(c[j]));
-				if (p[j].hasFreeBuild==0) p[j].hasFreeBuild=1;
-			}
-			for (int j=0;j<6;j++) {
-				for(int k=0;k<numPlayers;k++) {
-//					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers],debugLog);
-//					else p[k].getAction(cc[(k+j)%numPlayers],debugLog);
-					displayResources(p[k]);
-					if (age==1||age==3) displayCards(cc[(j+numPlayers-k)%numPlayers],null);
-					else displayCards(cc[(k+j)%numPlayers],null);
-					break;
-				}
-				break;
-//				for (Player pp:p) resolvePlayerOutcome(pp,discardPile);
-//				if (j!=5) for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
-			}
-			break;
-//			for (int k=0;k<numPlayers;k++) {
-//				ArrayList<Cards> remainingCards;
-//				if (age==1||age==3) remainingCards=cc[(5+numPlayers-k)%numPlayers];
-//				else remainingCards=cc[(k+5)%numPlayers];
-//				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
-//				else {
-//					if (debugLog) System.out.println("Extra turn from wonder effect");
-//					p[k].getAction(remainingCards,debugLog);
-//					resolvePlayerOutcome(p[k],discardPile);
-//				}
-//			}
-//			for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
-////			System.out.print("Discard pile: ");
-////			for (Cards d:discardPile) System.out.print(d.name+",");
-////			System.out.println();
-//			int[] warResult = new int[numPlayers];
-//			for (int j=0;j<numPlayers-1;j++) {
-//				if (p[j].numShield>p[j+1].numShield) {
-//					p[j].victoryToken+=2*age-1;p[j+1].defeatToken++;
-//					warResult[j]+=2*age-1;warResult[j+1]--;
-//				} else if (p[j+1].numShield>p[j].numShield) {
-//					p[j+1].victoryToken+=2*age-1;p[j].defeatToken++;
-//					warResult[j+1]+=2*age-1;warResult[j]--;
-//				}
-//			}
-//			if (p[0].numShield>p[numPlayers-1].numShield) {
-//				p[0].victoryToken+=2*age-1;p[numPlayers-1].defeatToken++;
-//				warResult[0]+=2*age-1;warResult[numPlayers-1]--;
-//			} else if (p[numPlayers-1].numShield>p[0].numShield) {
-//				p[numPlayers-1].victoryToken+=2*age-1;p[0].defeatToken++;
-//				warResult[numPlayers-1]+=2*age-1;warResult[0]--;
-//			}
-//			if (debugLog) {
-//				System.out.print("War results: (");
-//				for (int j=0;j<numPlayers;j++) System.out.print(p[j].numShield+",");
-//				System.out.print(") (");
-//				for (int j=0;j<numPlayers;j++) System.out.print(warResult[j]+",");
-//				System.out.println(")");
-//			}
-		}
-//		for (Player pp:p) if (pp.canCopyGuild) pp.copyGuild();
-//		countScore(p);
 	}
 
 	public void message(String s){
@@ -461,11 +470,37 @@ public class SevenWonders extends Activity implements CardView {
 	}
 
 	public void displayScore(Player[] p,ArrayList<Integer> winner,ArrayList<Integer> totalScore,int[][] scoreCategories){
+		String s = "";
+		s+=" | BR GY Y  BL GN R  P  | V  D \n";
+		for (Player pp:p) {
+			s+=String.format("%1d| %2d %2d %2d %2d %2d %2d %2d| %2d %2d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
+		}
+		s+=" | Mil Cn Won Civ Sci Com Gld | Sum\n";
+		for (int i=0;i<p.length;i++) {
+			s+=String.format("%1d| %3d %2d %3d %3d %3d %3d %3d | %3d\n",i,
+				scoreCategories[0][i],
+				scoreCategories[1][i],
+				scoreCategories[2][i],
+				scoreCategories[3][i],
+				scoreCategories[4][i],
+				scoreCategories[5][i],
+				scoreCategories[6][i],
+				totalScore.get(i));
+		}
+		if (winner.size()==1) s+="The winner is Player "+winner.get(0)+"!\n";
+		else {
+			s+="The winners are";
+			for (Integer i:winner) {
+				s+=" Player "+i;
+			}
+			s+="!\n";
+		}
 		final Activity c = this;
+		final String ss = s;
 		handler.post(new Runnable(){
 			public void run() {
 				AlertDialog.Builder builder = new AlertDialog.Builder(c);
-				builder.setMessage("Look at this dialog!")
+				builder.setMessage(ss)
 //       			.setCancelable(false)
 	          		.setPositiveButton("OK",null);
 //	          		.setPositiveButton("OK", new DialogInterface.OnClickListener() {
