@@ -3,7 +3,9 @@ bin
 src/controller/*
 src/model/*
 src/view/*
+src/com/view/*
 **/*.swp
 !src/controller/*.java
 !src/model/*.java
 !src/view/*.java
+!src/com/view/*.java
