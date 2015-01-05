@@ -20,6 +20,7 @@ public class Controller {
 	public Random random;
 	public CardView com;
 	public static boolean manualSimulation=true;
+	public static int defaultNumPlayers=7;
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 
@@ -29,7 +30,7 @@ public class Controller {
 		if (cv!=null) com=cv;
 		if (manualSimulation) {
 			if (cv==null) com = new CommandLine(true);
-			newGame(7);
+			newGame(defaultNumPlayers);
 //			Player p1 = new Player(1,Wonder.Rhodes,com);
 //			int[] d = {5};
 //			p1.addNeighborResource(d,true,true);
