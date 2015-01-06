@@ -216,7 +216,7 @@ public class Cards {
 		else if (name=="CHAMBER OF COMMERCE") s+="2 COIN 2 VICTORY/GRAY CARD";
 		else if (name=="ARENA") s+="3 COIN 1 VICTORY/WONDER STAGE";
 		else if (name=="WORKERS GUILD") s+="1 VICTORY/BROWN CARD";
-		else if (name=="CRAFTSMENS GUILD") s+="2 VICTORY/GRAY CARD";
+		else if (name=="CRAFTMENS GUILD") s+="2 VICTORY/GRAY CARD";
 		else if (name=="TRADERS GUILD") s+="1 VICTORY/YELLOW CARD";
 		else if (name=="PHILOSOPHERS GUILD") s+="1 VICTORY/GREEN CARD";
 		else if (name=="SPY GUILD") s+="1 VICTORY/RED CARD";

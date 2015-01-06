@@ -247,7 +247,7 @@ public class Controller {
 				} else if (c.name=="ARENA") commercialScore[i]+=p[i].numWonderStages;
 				else if (c.name=="WORKERS GUILD") {
 					guildScore[i]+=p[i].left.numBrown+p[i].right.numBrown;
-				} else if (c.name=="CRAFTSMENS GUILD") {
+				} else if (c.name=="CRAFTMENS GUILD") {
 					guildScore[i]+=p[i].left.numGray+p[i].right.numGray;
 				} else if (c.name=="TRADERS GUILD") {
 					guildScore[i]+=p[i].left.numYellow+p[i].right.numYellow;
