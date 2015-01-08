@@ -11,7 +11,7 @@ public class WonderStage {
 	public static WonderStage alexandriaA1=new WonderStage(0,0,2,0,0,0,0,0,0,3,SpecialResource.NONE);
 	public static WonderStage alexandriaA2=new WonderStage(0,2,0,0,0,0,0,0,0,0,SpecialResource.RAW_MATERIALS);
 	public static WonderStage alexandriaA3=new WonderStage(0,0,0,0,2,0,0,0,0,7,SpecialResource.NONE);
-	public static WonderStage ephesosA1=new WonderStage(0,2,0,0,0,0,0,0,0,3,SpecialResource.NONE);
+	public static WonderStage ephesosA1=new WonderStage(0,0,2,0,0,0,0,0,0,3,SpecialResource.NONE);
 	public static WonderStage ephesosA2=new WonderStage(0,0,0,2,0,0,0,9,0,0,SpecialResource.NONE);
 	public static WonderStage ephesosA3=new WonderStage(0,0,0,0,0,0,2,0,0,7,SpecialResource.NONE);
 	public static WonderStage babylonA1=new WonderStage(2,0,0,0,0,0,0,0,0,3,SpecialResource.NONE);
@@ -23,9 +23,9 @@ public class WonderStage {
 	public static WonderStage halikarnassosA1=new WonderStage(2,0,0,0,0,0,0,0,0,3,SpecialResource.NONE);
 	public static WonderStage halikarnassosA2=new WonderStage(0,3,0,0,0,0,0,0,0,0,SpecialResource.PLAY_FROM_DISCARD);
 	public static WonderStage halikarnassosA3=new WonderStage(0,0,0,0,0,2,0,0,0,7,SpecialResource.NONE);
-	public static WonderStage gizahA1=new WonderStage(0,2,0,0,0,0,0,0,0,3,SpecialResource.NONE);
+	public static WonderStage gizahA1=new WonderStage(0,0,2,0,0,0,0,0,0,3,SpecialResource.NONE);
 	public static WonderStage gizahA2=new WonderStage(0,0,0,3,0,0,0,0,0,5,SpecialResource.NONE);
-	public static WonderStage gizahA3=new WonderStage(0,4,0,0,0,0,0,0,0,7,SpecialResource.NONE);
+	public static WonderStage gizahA3=new WonderStage(0,0,4,0,0,0,0,0,0,7,SpecialResource.NONE);
 	public static WonderStage rhodesB1=new WonderStage(0,0,3,0,0,0,0,3,1,3,SpecialResource.NONE);
 	public static WonderStage rhodesB2=new WonderStage(0,4,0,0,0,0,0,4,1,4,SpecialResource.NONE);
 	public static WonderStage alexandriaB1=new WonderStage(2,0,0,0,0,0,0,0,0,0,SpecialResource.RAW_MATERIALS);

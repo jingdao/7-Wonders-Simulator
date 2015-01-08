@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
 import android.content.Intent;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -61,6 +63,7 @@ public class SevenWonders extends Activity implements CardView {
 	String resourceString="",commerceString="",eventInfo="";
 	boolean isWonderBSide=false;
 	Thread controllerThread;
+	int defaultNumPlayers,defaultWonderSide,defaultWonder;
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,8 @@ public class SevenWonders extends Activity implements CardView {
 		width = display.getWidth();
 		height = display.getHeight()-getStatusBarHeight();
 		
+		setPreferences();
+		getPreferences();
 		al = (AbsoluteLayout) findViewById(R.id.layout1);
 //		displayCardIcon();
 		displayResourceIcon();
@@ -78,16 +83,32 @@ public class SevenWonders extends Activity implements CardView {
 		displayMessageIcon();
 		displayWonderDescription();
 		Controller.manualSimulation=true;
-		selectNumPlayers();
 		final CardView cv = this;
 		controllerThread = new Thread(new Runnable(){
 			public void run() {
 				con=new Controller(cv);
 			}
 		});
+		selectNumPlayers();
 //		controllerThread.start();
 //		con.newGame(7);
     }
+
+	public void getPreferences() {
+		SharedPreferences pref = getPreferences(Context.MODE_PRIVATE);
+		defaultNumPlayers = pref.getInt("numPlayers",-1);
+		defaultWonderSide = pref.getInt("wonderSide",-1);
+		defaultWonder = pref.getInt("wonder",-1);
+	}
+
+	public void setPreferences() {
+		SharedPreferences pref = getPreferences(Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = pref.edit();
+		editor.putInt("numPlayers",7);
+		editor.putInt("wonderSide",0);
+		editor.putInt("wonder",0);
+		editor.commit();
+	}
 
 	public int getStatusBarHeight() { 
 	      int result = 0;
@@ -419,6 +440,14 @@ public class SevenWonders extends Activity implements CardView {
 		playButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8-40,height/8*7-25));
 		playButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
+				if (p.hasFreeBuild>0&&playableCost[currentCard]!=0) {
+					selectFreeBuild();
+					return;
+				}
+				if (playableCost[currentCard]>0) {
+					selectTrading(p,p.resourceOptions.get(currentCard));
+					return;
+				}
 				p.lastCard=cards.remove(currentCard);
 //				for (View v:cardViews) v.setVisibility(View.GONE);
 				for (View v:cardViews) al.removeView(v);
@@ -437,8 +466,12 @@ public class SevenWonders extends Activity implements CardView {
 		wonderButton.setLayoutParams(new AbsoluteLayout.LayoutParams(80,50,width/8*3-40,height/8*7-25));
 		wonderButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
-				p.lastCard=cards.remove(currentCard);
 				p.action=PlayerAction.WONDER;
+				if (p.wonderOptions!=null) {
+					selectTrading(p,p.wonderOptions);
+					return;
+				}
+				p.lastCard=cards.remove(currentCard);
 				for (View v:cardViews) al.removeView(v);
 				for (View v:descriptionIcons) v.setVisibility(View.GONE);
 //				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
@@ -553,9 +586,13 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void displayWonders(Wonder[] w){
 		numPlayers=w.length;
-		String s = w[0].name.toLowerCase()+"_";
+	}
+	
+	public void setWonder() {
+		String s = p.wonder.name.toLowerCase()+"_";
 		if (isWonderBSide) s+="b";
 		else s+="a";
+		System.out.println(s);
 		Resources res = getResources();
 		int vid = res.getIdentifier(s, "drawable", getApplicationContext().getPackageName());
 		Matrix matrix = new Matrix();
@@ -736,6 +773,11 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void selectWonderSide(Player pp){
 		p=pp;
+		if (defaultWonderSide>=0) {
+			if (defaultWonderSide==1) {p.isWonderBSide=true; isWonderBSide=true;}
+			setWonder();
+			return;
+		}
 		final Activity c = this;
 		handler.post(new Runnable(){
 			public void run() {
@@ -743,6 +785,7 @@ public class SevenWonders extends Activity implements CardView {
 				builder.setMessage("Your wonder is "+p.wonder.name+". Please select a side:")
 	          		.setPositiveButton("Side A", new DialogInterface.OnClickListener() {
 				             public void onClick(DialogInterface dialog, int id) {
+								 setWonder();
 								synchronized(lock) {
 									lock.notify();
 								}
@@ -752,6 +795,7 @@ public class SevenWonders extends Activity implements CardView {
 				             public void onClick(DialogInterface dialog, int id) {
 								p.isWonderBSide=true;
 								isWonderBSide=true;
+								 setWonder();
 								synchronized(lock) {
 									lock.notify();
 								}
@@ -767,7 +811,44 @@ public class SevenWonders extends Activity implements CardView {
 		}
 	}
 
+	public void selectFreeBuild() {
+		final Activity c = this;
+		handler.post(new Runnable(){
+			public void run() {
+				AlertDialog.Builder builder = new AlertDialog.Builder(c);
+				builder.setMessage("Use a free build?")
+					.setCancelable(false)
+	          		.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+				             public void onClick(DialogInterface dialog, int id) {
+								p.hasFreeBuild=0;
+								p.lastCard=cards.remove(currentCard);
+								for (View v:cardViews) al.removeView(v);
+								for (View v:descriptionIcons) v.setVisibility(View.GONE);
+								al.removeView(cardDescription);
+								synchronized(lock) {
+									lock.notify();
+								}
+							}
+					 })
+	          		.setNegativeButton("No", new DialogInterface.OnClickListener() {
+				            public void onClick(DialogInterface dialog, int id) {
+								if (playableCost[currentCard]>0) {
+									selectTrading(p,p.resourceOptions.get(currentCard));
+								}
+							}
+					 });
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+		});
+	}
+
 	public void selectNumPlayers(){
+		if (defaultNumPlayers>0) {
+			Controller.defaultNumPlayers=defaultNumPlayers;
+			controllerThread.start();
+			return;
+		}
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder
 //			.setMessage("Select number of players:")
@@ -798,6 +879,42 @@ public class SevenWonders extends Activity implements CardView {
 		alert.show();
 	}
 
+	public void selectTrading(Player pp, ArrayList<Integer> options_){
+		p=pp;
+		final ArrayList<Integer> options = options_;
+		final Activity cv = this;
+		handler.post(new Runnable(){
+			public void run() {
+				CharSequence[] labels = new CharSequence[options.size()+1];
+				for (int i=0;i<options.size();i++) labels[i]="Left:"+(options.get(i)/100)+" Right:"+(options.get(i)%100);
+				labels[options.size()]="Cancel";
+				AlertDialog.Builder builder = new AlertDialog.Builder(cv);
+				builder
+					.setTitle("Select amount to purchase from neighbors:")
+					.setCancelable(false)
+					.setItems(labels, new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								if (id==options.size()) {
+									p.action=PlayerAction.CARD;
+									return;
+								}
+								p.leftCost=options.get(id)/100;
+								p.rightCost=options.get(id)%100;
+								p.lastCard=cards.remove(currentCard);
+								for (View v:cardViews) al.removeView(v);
+								for (View v:descriptionIcons) v.setVisibility(View.GONE);
+								al.removeView(cardDescription);
+								synchronized(lock) {
+									lock.notify();
+								}
+							}
+					 });
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+		});
+	} 
+
 	public void selectAction(Player p,ArrayList<Cards> cards){
 		synchronized(lock) {
 			try {lock.wait();}
@@ -811,7 +928,6 @@ public class SevenWonders extends Activity implements CardView {
 	public void selectFromDiscard(Player p,ArrayList<Cards> discardPile, ArrayList<Cards> selection){}
 	public void selectGuild(Player p,ArrayList<Cards> guildChoices){}
 	public void selectLookAction(Player p,ArrayList<Cards> cards){} 
-	public void selectTrading(Player p, ArrayList<Integer> options){} 
 	public void selectCard(Player p,ArrayList<Cards> cards){}
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -825,19 +941,22 @@ public class SevenWonders extends Activity implements CardView {
 		case R.id.cardsplayedmenu:
 			return true;
 		case R.id.wondermenu:
-			previousIcons=new ArrayList<View>();
-			if (resourceIcons.get(0).getVisibility()==View.VISIBLE) {
-				for (View v:resourceIcons) {v.setVisibility(View.GONE); previousIcons.add(v);}
-				for (View v:cardViews) {v.setVisibility(View.GONE); previousIcons.add(v);}
-			} else if (descriptionIcons.get(0).getVisibility()==View.VISIBLE) {
-				for (View v:descriptionIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
-				cardDescription.setVisibility(View.GONE);previousIcons.add(cardDescription);
-			} else
-				for (View v:messageIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
-			wonderDescription.setVisibility(View.VISIBLE);
+			if (wonderDescription.getVisibility()!=View.VISIBLE) {
+				previousIcons=new ArrayList<View>();
+				if (resourceIcons.get(0).getVisibility()==View.VISIBLE) {
+					for (View v:resourceIcons) {v.setVisibility(View.GONE); previousIcons.add(v);}
+					for (View v:cardViews) {v.setVisibility(View.GONE); previousIcons.add(v);}
+				} else if (descriptionIcons.get(0).getVisibility()==View.VISIBLE) {
+					for (View v:descriptionIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
+					cardDescription.setVisibility(View.GONE);previousIcons.add(cardDescription);
+				} else
+					for (View v:messageIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
+				wonderDescription.setVisibility(View.VISIBLE);
+			}
 			return true;
         case R.id.newgamemenu:
 			Intent intent = getIntent();
+			intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
 			finish();
 			startActivity(intent);
             return true;
@@ -848,5 +967,8 @@ public class SevenWonders extends Activity implements CardView {
             return super.onOptionsItemSelected(item);
         }
 	}
+
+	@Override
+	public void onBackPressed() {}
 
 }
