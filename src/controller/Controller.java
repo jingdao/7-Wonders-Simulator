@@ -21,6 +21,7 @@ public class Controller {
 	public CardView com;
 	public static boolean manualSimulation=true;
 	public static int defaultNumPlayers=7;
+	public static String defaultWonder;
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 
@@ -136,11 +137,25 @@ public class Controller {
 		int numPlayers=w.length;
 		ArrayList<Wonder> wonders = new ArrayList<Wonder>();
 		wonders.addAll(Arrays.asList(Wonder.wonders));
-		for (int i=0;i<numPlayers;i++) {
-			if (manualSimulation) {
-				int j=random.nextInt(wonders.size());
-				w[i]=wonders.remove(j);
-			} else w[i]=wonders.remove(0);
+		if (defaultWonder!=null) {
+			int k;
+			for (k=0;k<wonders.size();k++) {
+				if (wonders.get(k).name.equals(defaultWonder)) break;
+			}
+			w[0]=wonders.remove(k);
+			for (int i=0;i<numPlayers-1;i++) {
+				if (manualSimulation) {
+					int j=random.nextInt(wonders.size());
+					w[i+1]=wonders.remove(j);
+				} else w[i+1]=wonders.remove(0);
+			}
+		} else {
+			for (int i=0;i<numPlayers;i++) {
+				if (manualSimulation) {
+					int j=random.nextInt(wonders.size());
+					w[i]=wonders.remove(j);
+				} else w[i]=wonders.remove(0);
+			}
 		}
 		com.displayWonders(w);
 

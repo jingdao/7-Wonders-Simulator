@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SevenWonders</string>
+	<string-array name="numPlayers">
+		<item>3</item>
+		<item>4</item>
+		<item>5</item>
+		<item>6</item>
+		<item>7</item>
+		<item>Prompt</item>
+		<item>Random</item>
+	</string-array>
+	<string-array name="wonderSide">
+		<item>Side A</item>
+		<item>Side B</item>
+		<item>Prompt</item>
+		<item>Random</item>
+	</string-array>
+	<string-array name="wonder">
+		<item>Alexandria</item>
+		<item>Babylon</item>
+		<item>Ephesos</item>
+		<item>Gizah</item>
+		<item>Halikarnassos</item>
+		<item>Olympia</item>
+		<item>Rhodes</item>
+		<item>Random</item>
+	</string-array>
+</resources>

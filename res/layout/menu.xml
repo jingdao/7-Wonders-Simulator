@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/cardsplayedmenu"
+		  android:title="Cards Played"/>
+	<item android:id="@+id/wondermenu"
+		  android:title="Wonder"/>
+	<item android:id="@+id/settingsmenu"
+		  android:title="Settings"/>
+    <item android:id="@+id/newgamemenu"
+          android:title="New Game" />
+	<item android:id="@+id/quitmenu"
+          android:title="Quit" />
+</menu>

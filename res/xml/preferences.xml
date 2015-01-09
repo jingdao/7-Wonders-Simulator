@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+	<PreferenceCategory android:title="User Preferences" >
+		<ListPreference
+				android:defaultValue="7"
+				android:entries="@array/numPlayers"
+				android:entryValues="@array/numPlayers"
+				android:key="numPlayers"
+				android:summary="Select number of players"
+				android:title="Number of Players" />
+		<ListPreference
+				android:defaultValue="Prompt"
+				android:entries="@array/wonderSide"
+				android:entryValues="@array/wonderSide"
+				android:key="wonderSide"
+				android:summary="Select which side of a wonder board to use"
+				android:title="Wonder Side" />
+		<ListPreference
+				android:defaultValue="Random"
+				android:entries="@array/wonder"
+				android:entryValues="@array/wonder"
+				android:key="wonder"
+				android:summary="Select default Wonder to play"
+				android:title="Wonder" />
+	</PreferenceCategory>
+</PreferenceScreen>
