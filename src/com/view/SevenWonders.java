@@ -11,6 +11,7 @@ import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuInflater;
+import android.view.KeyEvent;
 import android.content.Intent;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,10 +20,13 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.Matrix;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.content.res.Resources;
 import android.content.DialogInterface;
 import android.widget.AbsoluteLayout;
@@ -54,10 +58,14 @@ public class SevenWonders extends Activity implements CardView {
 	int[] playableCost;
 	Player p;
 	ArrayList<View> resourceIcons;
+	ArrayList<View> dualResourceIcons;
 	ArrayList<View> cardViews;
+	ArrayList<View> neighborDualResourceIcons=new ArrayList<View>();
+	ArrayList<View> neighborCardViews=new ArrayList<View>();
 	ArrayList<View> descriptionIcons;
 	ArrayList<View> messageIcons;
 	ArrayList<View> previousIcons;
+	RadioGroup radioIcons;
 	ImageView cardDescription,wonderDescription;
 	TextView cardDescriptionText,ageText,turnText,idText,nameText,messageText;
 	Button playButton,wonderButton,okButton;
@@ -67,7 +75,6 @@ public class SevenWonders extends Activity implements CardView {
 	boolean isWonderBSide=false,extraTurn=false;
 	Thread controllerThread;
 	String defaultNumPlayers,defaultWonderSide,defaultWonder;
-    /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,12 +120,6 @@ public class SevenWonders extends Activity implements CardView {
 		wonderDescription = new ImageView(this);
 		wonderDescription.setLayoutParams(new AbsoluteLayout.LayoutParams(width,height,0,0));
 		wonderDescription.setVisibility(View.GONE);
-		wonderDescription.setOnClickListener(new OnClickListener(){
-			public void onClick(View arg0) {
-				for (View v:previousIcons) v.setVisibility(View.VISIBLE);
-				wonderDescription.setVisibility(View.GONE);
-			}
-		});
 		al.addView(wonderDescription);
 	}
 
@@ -146,10 +147,10 @@ public class SevenWonders extends Activity implements CardView {
 						resourceString+=s+",";
 						int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
 						ImageView i1 = new ImageView(cv);
-						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()-24)*35));
+						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+dualResourceIcons.size()-24)*35));
 						i1.setImageResource(vid);
 						al.addView(i1);
-						resourceIcons.add(i1);
+						dualResourceIcons.add(i1);
 					}
 				}
 				if (p.commerceDescription.length()>commerceString.length()) {
@@ -158,18 +159,54 @@ public class SevenWonders extends Activity implements CardView {
 						commerceString+=s+",";
 						int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
 						ImageView i1 = new ImageView(cv);
-						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()-24)*35));
+						i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+dualResourceIcons.size()-24)*35));
 						i1.setImageResource(vid);
 						al.addView(i1);
-						resourceIcons.add(i1);
+						dualResourceIcons.add(i1);
 					}
 				}
 			}
 		});
 	}
 
+	public void displayNeighborResources(Player pp) {
+		idText.setText("Player "+pp.id);
+		if (p.isWonderBSide) nameText.setText(pp.wonder.name+"(B)");
+		else nameText.setText(pp.wonder.name+"(A)");
+		coinText.setText(""+pp.numCoin);
+		clayText.setText(""+pp.numClay);
+		oreText.setText(""+pp.numOre);
+		stoneText.setText(""+pp.numStone);
+		woodText.setText(""+pp.numWood);
+		glassText.setText(""+pp.numGlass);
+		loomText.setText(""+pp.numLoom);
+		papyrusText.setText(""+pp.numPapyrus);
+		shieldText.setText(""+pp.numShield);
+		wonderText.setText(""+pp.numWonderStages);
+		for (View v:neighborDualResourceIcons) al.removeView(v);
+		neighborDualResourceIcons=new ArrayList<View>();
+		Resources res = getResources();
+		for (String s:pp.resourceDescription.split(",")) {
+			int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
+			ImageView i1 = new ImageView(this);
+			i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+neighborDualResourceIcons.size()-24)*35));
+			i1.setImageResource(vid);
+			al.addView(i1);
+			neighborDualResourceIcons.add(i1);
+		}
+		for (String s:p.commerceDescription.split(",")) {
+			int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
+			ImageView i1 = new ImageView(this);
+			i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+neighborDualResourceIcons.size()-24)*35));
+			i1.setImageResource(vid);
+			al.addView(i1);
+			neighborDualResourceIcons.add(i1);
+		}
+	}
+
 	public void displayResourceIcon() {
 		resourceIcons = new ArrayList<View>();
+		dualResourceIcons = new ArrayList<View>();
 		ImageView i1 = new ImageView(this);
 		i1.setLayoutParams(new AbsoluteLayout.LayoutParams(30,30,0,topMargin));
 		i1.setImageResource(R.drawable.coin_resource);
@@ -270,24 +307,6 @@ public class SevenWonders extends Activity implements CardView {
 		turnText.setLayoutParams(new AbsoluteLayout.LayoutParams(width/5,topMargin,width/5*4,0));
 		turnText.setGravity(Gravity.CENTER);
 		al.addView(turnText);
-//		Button btn1 = new Button(this);
-//		btn1.setText("Wonder");
-//		btn1.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin));
-//		btn1.setOnClickListener(new OnClickListener() {	 
-//			public void onClick(View arg0) {
-//				System.out.println("Wonder");
-//			}
-//		});
-//		al.addView(btn1);
-//		Button btn2 = new Button(this);
-//		btn2.setText("Discard");
-//		btn2.setLayoutParams(new AbsoluteLayout.LayoutParams(75,50,width-75,topMargin+55));
-//		btn2.setOnClickListener(new OnClickListener() {	 
-//			public void onClick(View arg0) {
-//				System.out.println("Discard");
-//			}
-//		});
-//		al.addView(btn2);
 		resourceIcons.add(i1);
 		resourceIcons.add(i2);
 		resourceIcons.add(i3);
@@ -312,8 +331,6 @@ public class SevenWonders extends Activity implements CardView {
 		resourceIcons.add(nameText);
 		resourceIcons.add(ageText);
 		resourceIcons.add(turnText);
-//		resourceIcons.add(btn1);
-//		resourceIcons.add(btn2);
 	}
 
 	public void displayMessageIcon() {
@@ -322,6 +339,7 @@ public class SevenWonders extends Activity implements CardView {
 		messageText.setTextColor(Color.BLACK);
 		messageText.setLayoutParams(new AbsoluteLayout.LayoutParams(width-50,height/4*3,25,0));
 		messageText.setGravity(Gravity.CENTER_VERTICAL);
+		messageText.setTypeface(Typeface.MONOSPACE);
 		al.addView(messageText);
 		messageIcons.add(messageText);
 		okButton = new Button(this);
@@ -330,6 +348,41 @@ public class SevenWonders extends Activity implements CardView {
 		al.addView(okButton);
 		messageIcons.add(okButton);
 		for (View v:messageIcons) v.setVisibility(View.GONE);
+	}
+
+	public void displayNeighborIcon() {
+		RadioButton[] rb = new RadioButton[numPlayers];
+		radioIcons = new RadioGroup(this);
+		radioIcons.setOrientation(RadioGroup.VERTICAL);
+		radioIcons.setLayoutParams(new AbsoluteLayout.LayoutParams(width/4,height,width/4*3,topMargin));
+		radioIcons.setVisibility(View.GONE);
+		for(int i=0; i<numPlayers; i++){
+			final int j=i;
+			rb[i]  = new RadioButton(this);
+			rb[i].setTextColor(Color.BLACK);
+			rb[i].setText(""+i);
+			rb[i].setOnClickListener(new OnClickListener() {
+				public void onClick(View v) {
+					Player cp;
+					switch (j) {
+						case 0:cp=p;break;
+						case 1:cp=p.left;break;
+						case 2:cp=p.left.left;break;
+						case 3:cp=p.left.left.left;break;
+						case 4:cp=p.left.left.left.left;break;
+						case 5:cp=p.left.left.left.left.left;break;
+						case 6:cp=p.left.left.left.left.left.left;break;
+						default:cp=p;break;
+					}
+					displayNeighborResources(cp);
+					displayCardsPlayed(cp.playedCards);
+					System.out.println(cp.id);
+				}  
+			});
+			radioIcons.addView(rb[i]);
+		}
+		al.addView(radioIcons);
+
 	}
 
 	public void displayText(String s,OnClickListener listener) {
@@ -387,6 +440,24 @@ public class SevenWonders extends Activity implements CardView {
 				}
 			}
 		});
+	}
+
+	public void displayCardsPlayed(ArrayList<Cards> c) {
+		int cardWidth=width/2;
+		int cardHeight=70;
+		for (View v:neighborCardViews) al.removeView(v);
+		neighborCardViews=new ArrayList<View>();
+		int numCards=c.size();
+		for (int i=0;i<numCards;i++) {
+			final int j=i;
+			ImageView iv = new ImageView(this);
+			iv.setLayoutParams(new AbsoluteLayout.LayoutParams(cardWidth,cardHeight,cardWidth/2,topMargin+cardHeight*i));
+			al.addView(iv);
+			neighborCardViews.add(iv);
+			Resources res = getResources();
+			int vid = res.getIdentifier(c.get(i).name.toLowerCase().replaceAll(" ","_"), "drawable", getApplicationContext().getPackageName());
+			iv.setImageResource(vid);
+		}
 	}
 
 	public void displayDescriptionIcons() {
@@ -460,6 +531,7 @@ public class SevenWonders extends Activity implements CardView {
 			public void onClick(View arg0) {
 				for (View v:descriptionIcons) v.setVisibility(View.GONE);
 				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+				for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 				for (int i=0;i<cards.size()*2;i++) cardViews.get(i).setVisibility(View.VISIBLE);
 				al.removeView(cardDescription);
 			}
@@ -501,6 +573,7 @@ public class SevenWonders extends Activity implements CardView {
 		cardDescriptionText.setText(s);
 		for (View v:cardViews) v.setVisibility(View.GONE);
 		for (View v:resourceIcons) v.setVisibility(View.GONE);
+		for (View v:dualResourceIcons) v.setVisibility(View.GONE);
 		for (View v:descriptionIcons) v.setVisibility(View.VISIBLE);
 	}
 
@@ -529,10 +602,6 @@ public class SevenWonders extends Activity implements CardView {
 		}
 	}
 
-	public void displayWonders(Wonder[] w){
-		numPlayers=w.length;
-	}
-	
 	public void setWonder() {
 		String s = p.wonder.name.toLowerCase()+"_";
 		if (isWonderBSide) s+="b";
@@ -571,14 +640,14 @@ public class SevenWonders extends Activity implements CardView {
 	}
 
 	public void displayScore(Player[] p,ArrayList<Integer> winner,ArrayList<Integer> totalScore,int[][] scoreCategories){
-		String s = "";
+		String s = "Score:\n";
 		s+=" | BR GY Y  BL GN R  P  | V  D \n";
 		for (Player pp:p) {
 			s+=String.format("%1d| %2d %2d %2d %2d %2d %2d %2d| %2d %2d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
-		s+="\n | Mil Cn Won Civ Sci Com Gld | Sum\n";
+		s+="\n |Mil Cn Won Civ Sci Com Gld|Sum\n";
 		for (int i=0;i<p.length;i++) {
-			s+=String.format("%1d| %3d %2d %3d %3d %3d %3d %3d | %3d\n",i,
+			s+=String.format("%1d|%3d %2d %3d %3d %3d %3d %3d|%3d\n",i,
 				scoreCategories[0][i],
 				scoreCategories[1][i],
 				scoreCategories[2][i],
@@ -588,13 +657,13 @@ public class SevenWonders extends Activity implements CardView {
 				scoreCategories[6][i],
 				totalScore.get(i));
 		}
-		if (winner.size()==1) s+="\nThe winner is Player "+winner.get(0)+"!\n";
+		if (winner.size()==1) s+="The winner is Player "+winner.get(0)+"!";
 		else {
 			s+="The winners are";
 			for (Integer i:winner) {
 				s+=" Player "+i;
 			}
-			s+="!\n";
+			s+="!";
 		}
 		displayText(s,new OnClickListener(){
 			public void onClick(View arg0) {
@@ -611,7 +680,7 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void showDiscardAction(String src){
 		playerCounter++;
-		eventInfo+=src+" discarded a card for 3 coin\n";
+		eventInfo+=src+" discards for 3 coin\n";
 		if (playerCounter==numPlayers) {
 			playerCounter=0;
 			displayText(eventInfo,new OnClickListener() {
@@ -619,11 +688,13 @@ public class SevenWonders extends Activity implements CardView {
 					if (currentTurn!=6) {
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					} else if (p.canPlayLastCard&&extraTurn) {
 						extraTurn=false;
 						playerCounter=numPlayers-1;
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					}
 					synchronized(lock) {
 						lock.notify();
@@ -651,11 +722,13 @@ public class SevenWonders extends Activity implements CardView {
 					if (currentTurn!=6) {
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					} else if (p.canPlayLastCard&&extraTurn) {
 						extraTurn=false;
 						playerCounter=numPlayers-1;
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					}
 					synchronized(lock) {
 						lock.notify();
@@ -678,11 +751,13 @@ public class SevenWonders extends Activity implements CardView {
 					if (currentTurn!=6) {
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					} else if (p.canPlayLastCard&&extraTurn) {
 						extraTurn=false;
 						playerCounter=numPlayers-1;
 						for (View v:messageIcons) v.setVisibility(View.GONE);
 						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 					}
 					synchronized(lock) {
 						lock.notify();
@@ -703,6 +778,7 @@ public class SevenWonders extends Activity implements CardView {
 				if (currentAge!=3||currentTurn!=6) {
 					for (View v:messageIcons) v.setVisibility(View.GONE);
 					for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+					for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 				}
 				synchronized(lock) {
 					lock.notify();
@@ -829,8 +905,10 @@ public class SevenWonders extends Activity implements CardView {
 			catch (NumberFormatException e) {}
 			controllerThread.start();
 		}
+		numPlayers=Controller.defaultNumPlayers;
 		if (!defaultWonder.equals("Random")) Controller.defaultWonder=defaultWonder.toUpperCase();
 		else Controller.defaultWonder=null;
+		displayNeighborIcon();
 	}
 
 	public void selectTrading(Player pp, ArrayList<Integer> options_){
@@ -876,6 +954,7 @@ public class SevenWonders extends Activity implements CardView {
 		}
 	} 
 
+	public void displayWonders(Wonder[] w){}
 	public void displayPlayerName(String s){}
 	public void displayDiscardPile(ArrayList<Cards> discardPile){}
 	public void displayNeighborResources(String name,Player p){}
@@ -896,12 +975,29 @@ public class SevenWonders extends Activity implements CardView {
 			startActivity(new Intent(this,SettingsActivity.class));
 			return true;
 		case R.id.cardsplayedmenu:
+			previousIcons=new ArrayList<View>();
+			if (resourceIcons.get(0).getVisibility()==View.VISIBLE) {
+				for (View v:cardViews) {v.setVisibility(View.GONE); previousIcons.add(v);}
+				for (View v:dualResourceIcons) {v.setVisibility(View.GONE); previousIcons.add(v);}
+			} else if (descriptionIcons.get(0).getVisibility()==View.VISIBLE) {
+				for (View v:resourceIcons) {v.setVisibility(View.VISIBLE);}
+				for (View v:descriptionIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
+				cardDescription.setVisibility(View.GONE);previousIcons.add(cardDescription);
+			} else {
+				for (View v:resourceIcons) {v.setVisibility(View.VISIBLE);}
+				for (View v:messageIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
+			}
+			radioIcons.setVisibility(View.VISIBLE);
+			radioIcons.check(0);
+			displayCardsPlayed(p.playedCards);
+//			displayNeighborResources(p);
 			return true;
 		case R.id.wondermenu:
 			if (wonderDescription.getVisibility()!=View.VISIBLE) {
 				previousIcons=new ArrayList<View>();
 				if (resourceIcons.get(0).getVisibility()==View.VISIBLE) {
 					for (View v:resourceIcons) {v.setVisibility(View.GONE); previousIcons.add(v);}
+					for (View v:dualResourceIcons) {v.setVisibility(View.GONE); previousIcons.add(v);}
 					for (View v:cardViews) {v.setVisibility(View.GONE); previousIcons.add(v);}
 				} else if (descriptionIcons.get(0).getVisibility()==View.VISIBLE) {
 					for (View v:descriptionIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
@@ -925,6 +1021,27 @@ public class SevenWonders extends Activity implements CardView {
 	}
 
 	@Override
-	public void onBackPressed() {}
+	public void onBackPressed() {
+		if (radioIcons.getVisibility()==View.VISIBLE) {
+			for (View v:previousIcons) v.setVisibility(View.VISIBLE);
+			for (View v:neighborCardViews) v.setVisibility(View.GONE);
+			for (View v:neighborDualResourceIcons) v.setVisibility(View.GONE);
+			radioIcons.setVisibility(View.GONE);
+			displayResources(p);
+		} else if (wonderDescription.getVisibility()==View.VISIBLE) {
+			for (View v:previousIcons) v.setVisibility(View.VISIBLE);
+			wonderDescription.setVisibility(View.GONE);
+		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keycode, KeyEvent event ) {
+		 if(keycode == KeyEvent.KEYCODE_MENU){
+			if (radioIcons.getVisibility()==View.VISIBLE||wonderDescription.getVisibility()==View.VISIBLE) {
+				return true;
+			}
+		 }
+		 return super.onKeyDown(keycode,event);  
+	}
 
 }
