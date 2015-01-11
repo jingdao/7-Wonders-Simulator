@@ -45,9 +45,9 @@ public class Cards {
 	public static Cards Brickyard = new Cards("BRICKYARD",0,0,0,0,0,0,0,1,CardType.BROWN,ResourceType.CLAY,2,null);
 	public static Cards Foundry = new Cards("FOUNDRY",0,0,0,0,0,0,0,1,CardType.BROWN,ResourceType.ORE,2,null);
 	public static Cards Aqueduct = new Cards("AQUEDUCT",0,0,3,0,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,5,"BATHS");
-	public static Cards Temple = new Cards("TEMPLE",1,0,0,1,1,0,0,0,CardType.BLUE,ResourceType.VICTORY,5,"ALTAR");
-	public static Cards Statue = new Cards("STATUE",0,1,0,1,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,5,"THEATER");
-	public static Cards Courthouse = new Cards("COURTHOUSE",2,0,0,0,0,1,0,0,CardType.BLUE,ResourceType.VICTORY,5,"SCRIPTORIUM");
+	public static Cards Temple = new Cards("TEMPLE",1,0,0,1,1,0,0,0,CardType.BLUE,ResourceType.VICTORY,3,"ALTAR");
+	public static Cards Statue = new Cards("STATUE",0,1,0,1,0,0,0,0,CardType.BLUE,ResourceType.VICTORY,4,"THEATER");
+	public static Cards Courthouse = new Cards("COURTHOUSE",2,0,0,0,0,1,0,0,CardType.BLUE,ResourceType.VICTORY,4,"SCRIPTORIUM");
 	public static Cards Forum = new Cards("FORUM",2,0,0,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"TRADING POST");
 	public static Cards Caravansery = new Cards("CARAVANSERY",0,0,0,2,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,"MARKETPLACE");
 	public static Cards Vineyard = new Cards("VINEYARD",0,0,0,0,0,0,0,0,CardType.YELLOW,ResourceType.COMMERCE,0,null);

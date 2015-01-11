@@ -66,6 +66,7 @@ public class SevenWonders extends Activity implements CardView {
 	ArrayList<View> messageIcons;
 	ArrayList<View> previousIcons;
 	RadioGroup radioIcons;
+	RadioButton radioZero;
 	ImageView cardDescription,wonderDescription;
 	TextView cardDescriptionText,ageText,turnText,idText,nameText,messageText;
 	Button playButton,wonderButton,okButton;
@@ -171,7 +172,7 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void displayNeighborResources(Player pp) {
 		idText.setText("Player "+pp.id);
-		if (p.isWonderBSide) nameText.setText(pp.wonder.name+"(B)");
+		if (pp.isWonderBSide) nameText.setText(pp.wonder.name+"(B)");
 		else nameText.setText(pp.wonder.name+"(A)");
 		coinText.setText(""+pp.numCoin);
 		clayText.setText(""+pp.numClay);
@@ -187,6 +188,7 @@ public class SevenWonders extends Activity implements CardView {
 		neighborDualResourceIcons=new ArrayList<View>();
 		Resources res = getResources();
 		for (String s:pp.resourceDescription.split(",")) {
+			if (s.length()==0) break;
 			int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
 			ImageView i1 = new ImageView(this);
 			i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+neighborDualResourceIcons.size()-24)*35));
@@ -194,7 +196,8 @@ public class SevenWonders extends Activity implements CardView {
 			al.addView(i1);
 			neighborDualResourceIcons.add(i1);
 		}
-		for (String s:p.commerceDescription.split(",")) {
+		for (String s:pp.commerceDescription.split(",")) {
+			if (s.length()==0) break;
 			int vid = res.getIdentifier(s.toLowerCase().replaceAll("/","")+"_resource", "drawable", getApplicationContext().getPackageName());
 			ImageView i1 = new ImageView(this);
 			i1.setLayoutParams(new AbsoluteLayout.LayoutParams(60,30,0,topMargin+350+(resourceIcons.size()+neighborDualResourceIcons.size()-24)*35));
@@ -359,6 +362,7 @@ public class SevenWonders extends Activity implements CardView {
 		for(int i=0; i<numPlayers; i++){
 			final int j=i;
 			rb[i]  = new RadioButton(this);
+			if (i==0) radioZero = rb[i];
 			rb[i].setTextColor(Color.BLACK);
 			rb[i].setText(""+i);
 			rb[i].setOnClickListener(new OnClickListener() {
@@ -376,13 +380,11 @@ public class SevenWonders extends Activity implements CardView {
 					}
 					displayNeighborResources(cp);
 					displayCardsPlayed(cp.playedCards);
-					System.out.println(cp.id);
 				}  
 			});
 			radioIcons.addView(rb[i]);
 		}
 		al.addView(radioIcons);
-
 	}
 
 	public void displayText(String s,OnClickListener listener) {
@@ -560,7 +562,7 @@ public class SevenWonders extends Activity implements CardView {
 		if (playableCost[i]==-2) s+="\nCannot build 2 identical structures";
 		else if (playableCost[i]==-1) s+="\nNot enough resources to build";
 		else playButton.setEnabled(true);
-		if (p.hasFreeBuild>0) playButton.setEnabled(true);
+		if (p.hasFreeBuild>0&&playableCost[i]!=-2) playButton.setEnabled(true);
 		if (p.canBuildWonder) wonderButton.setEnabled(true);
 		else {
 			wonderButton.setEnabled(false);
@@ -639,13 +641,13 @@ public class SevenWonders extends Activity implements CardView {
 		});
 	}
 
-	public void displayScore(Player[] p,ArrayList<Integer> winner,ArrayList<Integer> totalScore,int[][] scoreCategories){
+	public void displayScore(Player[] p,ArrayList<Integer> winner,ArrayList<Integer> totalScore,int[][] scoreCategories) {
 		String s = "Score:\n";
 		s+=" | BR GY Y  BL GN R  P  | V  D \n";
 		for (Player pp:p) {
 			s+=String.format("%1d| %2d %2d %2d %2d %2d %2d %2d| %2d %2d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
-		s+="\n |Mil Cn Won Civ Sci Com Gld|Sum\n";
+		s+=" |Mil Cn Won Civ Sci Com Gld|Sum\n";
 		for (int i=0;i<p.length;i++) {
 			s+=String.format("%1d|%3d %2d %3d %3d %3d %3d %3d|%3d\n",i,
 				scoreCategories[0][i],
@@ -947,6 +949,72 @@ public class SevenWonders extends Activity implements CardView {
 		});
 	} 
 
+	public void selectGuild(Player pp,ArrayList<Cards> guildChoices){
+		p=pp;
+		final ArrayList<Cards> options = guildChoices;
+		final Activity cv = this;
+		handler.post(new Runnable(){
+			public void run() {
+				CharSequence[] labels = new CharSequence[options.size()];
+				for (int i=0;i<options.size();i++) labels[i]=options.get(i).name;
+				AlertDialog.Builder builder = new AlertDialog.Builder(cv);
+				builder
+					.setTitle("Wonder effect: Select guild to copy from neighbors:")
+					.setCancelable(false)
+					.setItems(labels, new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								p.playedCards.add(options.get(id));
+								synchronized(lock) {
+									lock.notify();
+								}
+							}
+					 });
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+		});
+		synchronized(lock) {
+			try {lock.wait();}
+			catch (InterruptedException e) {}
+		}
+	}
+
+	public void selectFromDiscard(Player pp,ArrayList<Cards> discardPile_, ArrayList<Cards> selection_){
+		p=pp;
+		final ArrayList<Cards> discardPile = discardPile_;
+		final ArrayList<Cards> selection = new ArrayList<Cards>();
+		for (Cards c:selection_) if (c!=null) selection.add(c);
+		final Activity cv = this;
+		handler.post(new Runnable(){
+			public void run() {
+				CharSequence[] labels = new CharSequence[selection.size()];
+				for (int i=0;i<selection.size();i++) labels[i]=selection.get(i).name;
+				AlertDialog.Builder builder = new AlertDialog.Builder(cv);
+				builder
+					.setTitle("Wonder effect: Select card to play from discard pile:")
+					.setCancelable(false)
+					.setItems(labels, new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								Cards c = selection.get(id);
+								for (int i=0;i<discardPile.size();i++) {
+									if (discardPile.get(i)==c)
+										p.playedCards.add(discardPile.remove(i));
+								}
+								synchronized(lock) {
+									lock.notify();
+								}
+							}
+					 });
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+		});
+		synchronized(lock) {
+			try {lock.wait();}
+			catch (InterruptedException e) {}
+		}
+	}
+
 	public void selectAction(Player p,ArrayList<Cards> cards){
 		synchronized(lock) {
 			try {lock.wait();}
@@ -958,8 +1026,6 @@ public class SevenWonders extends Activity implements CardView {
 	public void displayPlayerName(String s){}
 	public void displayDiscardPile(ArrayList<Cards> discardPile){}
 	public void displayNeighborResources(String name,Player p){}
-	public void selectFromDiscard(Player p,ArrayList<Cards> discardPile, ArrayList<Cards> selection){}
-	public void selectGuild(Player p,ArrayList<Cards> guildChoices){}
 	public void selectLookAction(Player p,ArrayList<Cards> cards){} 
 	public void selectCard(Player p,ArrayList<Cards> cards){}
 
@@ -988,9 +1054,9 @@ public class SevenWonders extends Activity implements CardView {
 				for (View v:messageIcons) {v.setVisibility(View.GONE);previousIcons.add(v);}
 			}
 			radioIcons.setVisibility(View.VISIBLE);
-			radioIcons.check(0);
+			radioZero.setChecked(true);
 			displayCardsPlayed(p.playedCards);
-//			displayNeighborResources(p);
+			displayNeighborResources(p);
 			return true;
 		case R.id.wondermenu:
 			if (wonderDescription.getVisibility()!=View.VISIBLE) {
@@ -1026,6 +1092,9 @@ public class SevenWonders extends Activity implements CardView {
 			for (View v:previousIcons) v.setVisibility(View.VISIBLE);
 			for (View v:neighborCardViews) v.setVisibility(View.GONE);
 			for (View v:neighborDualResourceIcons) v.setVisibility(View.GONE);
+			if (cardDescriptionText.getVisibility()==View.VISIBLE||messageText.getVisibility()==View.VISIBLE)
+				for (View v:resourceIcons)
+					v.setVisibility(View.GONE);
 			radioIcons.setVisibility(View.GONE);
 			displayResources(p);
 		} else if (wonderDescription.getVisibility()==View.VISIBLE) {

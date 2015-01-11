@@ -103,7 +103,7 @@ public class Controller {
 				else remainingCards=cc[(k+5)%numPlayers];
 				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
 				else {
-					com.message("Extra turn from wonder effect");
+//					com.message("Extra turn from wonder effect");
 					p[k].getAction(remainingCards);
 					resolvePlayerOutcome(p[k],discardPile);
 				}

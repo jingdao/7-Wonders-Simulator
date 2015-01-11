@@ -51,6 +51,8 @@ public class Player {
 		}
 		if (id==0&&Controller.manualSimulation) {
 			view.selectWonderSide(this);
+		} else {
+			isWonderBSide=id%2==0;
 		}
 	}
 
@@ -64,6 +66,22 @@ public class Player {
 			view.displayResources(this);
 			view.selectAction(this,cards);
 		} else {
+			if (canBuildWonder) {
+				action=PlayerAction.WONDER;
+				cardPlayed=0;
+				if (wonderOptions!=null) {
+					int minLeft=50,minRight=50;
+					for (int j:wonderOptions) {
+						if (j/100+j%100<minLeft+minRight) {
+							minLeft=j/100;
+							minRight=j%100;
+						}
+					}
+					leftCost=minLeft;
+					rightCost=minRight;
+				}
+				return;
+			}
 			for (int i=0;i<cards.size();i++) {
 				if (hasFreeBuild>0&&playableCost[i]!=-2) {hasFreeBuild=0;cardPlayed=i;break;}
 				else if (playableCost[i]==0) {cardPlayed=i; break;}
@@ -82,8 +100,9 @@ public class Player {
 			}
 			if (cardPlayed==-1) {
 				cardPlayed=0;
-				if (canBuildWonder) action=PlayerAction.WONDER;
-				else action=PlayerAction.COIN;
+//				if (canBuildWonder) action=PlayerAction.WONDER;
+//				else
+					action=PlayerAction.COIN;
 			}
 			lastCard = cards.remove(cardPlayed);
 		};
