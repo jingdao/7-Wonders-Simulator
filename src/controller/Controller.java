@@ -17,16 +17,16 @@ import java.util.HashSet;
 
 public class Controller {
 
-	public Random random;
+	public static Random random = new Random();
 	public CardView com;
 	public static boolean manualSimulation=true;
 	public static int defaultNumPlayers=7;
 	public static String defaultWonder;
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
+	public Player[] lastPlayers;
 
 	public Controller(CardView cv) {
-		random = new Random();
 		Cards.buildDependencyMap();
 		if (cv!=null) com=cv;
 		if (manualSimulation) {
@@ -64,6 +64,7 @@ public class Controller {
 		Wonder[] w = new Wonder[numPlayers];
 		Cards[][] c=new Cards[numPlayers][7];
 		Player[] p = new Player[numPlayers];
+		lastPlayers=p;
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
 		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i],com);
@@ -151,10 +152,10 @@ public class Controller {
 			}
 		} else {
 			for (int i=0;i<numPlayers;i++) {
-				if (manualSimulation) {
+//				if (manualSimulation) {
 					int j=random.nextInt(wonders.size());
 					w[i]=wonders.remove(j);
-				} else w[i]=wonders.remove(0);
+//				} else w[i]=wonders.remove(0);
 			}
 		}
 		com.displayWonders(w);
