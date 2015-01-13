@@ -290,4 +290,7 @@ public class CommandLine implements CardView {
 		}
 		p.lastCard = cards.remove(cardPlayed);
 	}
+	
+	public void updateView() {}
+
 }

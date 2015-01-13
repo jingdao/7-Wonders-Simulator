@@ -96,7 +96,15 @@ public class Controller {
 					else p[k].getAction(cc[(k+j)%numPlayers]);
 				}
 				for (Player pp:p) resolvePlayerOutcome(pp,discardPile);
-				if (j!=5) for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
+				if (j!=5) {
+					for (Player pp:p) {
+						if (pp.canPlayFromDiscard) {
+							com.message("Player "+pp.id+" gets to play from the discard pile (wonder effect)");
+							pp.playFromDiscard(discardPile);
+						}
+					}
+					com.updateView();
+				}
 			}
 			for (int k=0;k<numPlayers;k++) {
 				ArrayList<Cards> remainingCards;
@@ -104,12 +112,26 @@ public class Controller {
 				else remainingCards=cc[(k+5)%numPlayers];
 				if (!p[k].canPlayLastCard) discardPile.add(remainingCards.get(0));
 				else {
-//					com.message("Extra turn from wonder effect");
+					com.message("Player "+k+" gets to play the last card (wonder effect)");
 					p[k].getAction(remainingCards);
 					resolvePlayerOutcome(p[k],discardPile);
 				}
 			}
-			for (Player pp:p) if (pp.canPlayFromDiscard) pp.playFromDiscard(discardPile);
+			for (Player pp:p) {
+				if (pp.canPlayFromDiscard) {
+					com.message("Player "+pp.id+" gets to play from the discard pile (wonder effect)");
+					pp.playFromDiscard(discardPile);
+				}
+			}
+			if (age==3) {
+				for (Player pp:p) {
+					if (pp.canCopyGuild) {
+						com.message("Player "+pp.id+" gets to copy a guild (wonder effect)");
+						pp.copyGuild();
+					}
+				}
+			}
+			com.updateView();
 			com.displayDiscardPile(discardPile);
 			int[] warResult = new int[numPlayers];
 			for (int j=0;j<numPlayers-1;j++) {
@@ -130,7 +152,6 @@ public class Controller {
 			}
 			com.displayWarResults(p,warResult);
 		}
-		for (Player pp:p) if (pp.canCopyGuild) pp.copyGuild();
 		countScore(p);
 	}
 

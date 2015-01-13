@@ -31,5 +31,6 @@ public interface CardView {
 	public void selectLookAction(Player p,ArrayList<Cards> cards); 
 	public void selectTrading(Player p, ArrayList<Integer> options); 
 	public void selectCard(Player p,ArrayList<Cards> cards);
+	public void updateView();
 
 }

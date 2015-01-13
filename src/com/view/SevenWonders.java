@@ -52,7 +52,7 @@ public class SevenWonders extends Activity implements CardView {
 	Object lock = new Object();
 	Handler handler = new Handler();
 	Random random = new Random();
-	int numPlayers,playerCounter;
+	int numPlayers;
 	int currentCard,currentTurn,currentAge;
 	ArrayList<Cards> cards;
 	int[] playableCost;
@@ -73,7 +73,7 @@ public class SevenWonders extends Activity implements CardView {
 	AbsoluteLayout al;
 	int topMargin=30;
 	String resourceString="",commerceString="",eventInfo="";
-	boolean isWonderBSide=false,extraTurn=false;
+	boolean isWonderBSide=false;
 	Thread controllerThread;
 	String defaultNumPlayers,defaultWonderSide,defaultWonder;
     @Override
@@ -129,6 +129,8 @@ public class SevenWonders extends Activity implements CardView {
 		final Activity cv = this;
 		handler.post(new Runnable(){
 			public void run() {
+				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+				for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 				idText.setText("Player "+p.id);
 				if (p.isWonderBSide) nameText.setText(p.wonder.name+"(B)");
 				else nameText.setText(p.wonder.name+"(A)");
@@ -395,6 +397,8 @@ public class SevenWonders extends Activity implements CardView {
 				messageText.setText(ss);
 				okButton.setOnClickListener(l);
 				for (View v:messageIcons) v.setVisibility(View.VISIBLE);
+				for (View v:resourceIcons) v.setVisibility(View.GONE);
+				for (View v:dualResourceIcons) v.setVisibility(View.GONE);
 			}
 		});
 		synchronized(lock) {
@@ -624,7 +628,6 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void displayAge(int age_){
 		currentAge = age_;
-		extraTurn=true;
 		handler.post(new Runnable(){
 			public void run() {
 				ageText.setText("Age "+currentAge);
@@ -681,34 +684,10 @@ public class SevenWonders extends Activity implements CardView {
 	}
 
 	public void showDiscardAction(String src){
-		playerCounter++;
 		eventInfo+=src+" discards for 3 coin\n";
-		if (playerCounter==numPlayers) {
-			playerCounter=0;
-			displayText(eventInfo,new OnClickListener() {
-				public void onClick(View arg0) {
-					if (currentTurn!=6) {
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					} else if (p.canPlayLastCard&&extraTurn) {
-						extraTurn=false;
-						playerCounter=numPlayers-1;
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					}
-					synchronized(lock) {
-						lock.notify();
-					}
-				}
-			});
-			eventInfo="";
-		}
 	}
 
 	public void showWonderAction(WonderStage w,int numWonderStages,String name){
-		playerCounter++;
 		eventInfo+=name+" built Wonder Stage "+numWonderStages+" ";
 		if (w.numCoin>0) {
 			eventInfo+="+"+w.numCoin+" COIN ";
@@ -717,57 +696,12 @@ public class SevenWonders extends Activity implements CardView {
 			eventInfo+="+"+w.numShield+" SHIELD ";
 		}
 		eventInfo+="\n";
-		if (playerCounter==numPlayers) {
-			playerCounter=0;
-			displayText(eventInfo,new OnClickListener() {
-				public void onClick(View arg0) {
-					if (currentTurn!=6) {
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					} else if (p.canPlayLastCard&&extraTurn) {
-						extraTurn=false;
-						playerCounter=numPlayers-1;
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					}
-					synchronized(lock) {
-						lock.notify();
-					}
-				}
-			});
-			eventInfo="";
-		}
 	}
 
 	public void showCardAction(String cardName,int dCoin,String playerName){
-		playerCounter++;
 		eventInfo+=playerName+" played "+cardName;
 		if (dCoin>0) eventInfo+=" for "+dCoin+" coin\n";
 		else eventInfo+="\n";
-		if (playerCounter==numPlayers) {
-			playerCounter=0;
-			displayText(eventInfo,new OnClickListener() {
-				public void onClick(View arg0) {
-					if (currentTurn!=6) {
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					} else if (p.canPlayLastCard&&extraTurn) {
-						extraTurn=false;
-						playerCounter=numPlayers-1;
-						for (View v:messageIcons) v.setVisibility(View.GONE);
-						for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-						for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
-					}
-					synchronized(lock) {
-						lock.notify();
-					}
-				}
-			});
-			eventInfo="";
-		}
 	} 
 
 	public void displayWarResults(Player[] p,int[] warResult) {
@@ -779,8 +713,8 @@ public class SevenWonders extends Activity implements CardView {
 			public void onClick(View arg0) {
 				if (currentAge!=3||currentTurn!=6) {
 					for (View v:messageIcons) v.setVisibility(View.GONE);
-					for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-					for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
+//					for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+//					for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 				}
 				synchronized(lock) {
 					lock.notify();
@@ -997,8 +931,10 @@ public class SevenWonders extends Activity implements CardView {
 							public void onClick(DialogInterface dialog, int id) {
 								Cards c = selection.get(id);
 								for (int i=0;i<discardPile.size();i++) {
-									if (discardPile.get(i)==c)
+									if (discardPile.get(i)==c) {
 										p.playedCards.add(discardPile.remove(i));
+										p.applyCardEffect(c);
+									}
 								}
 								synchronized(lock) {
 									lock.notify();
@@ -1013,6 +949,22 @@ public class SevenWonders extends Activity implements CardView {
 			try {lock.wait();}
 			catch (InterruptedException e) {}
 		}
+	}
+
+	public void updateView() {
+		displayText(eventInfo,new OnClickListener() {
+			public void onClick(View arg0) {
+//				if (currentTurn!=6) {
+					for (View v:messageIcons) v.setVisibility(View.GONE);
+//					for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+//					for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
+//				}
+				synchronized(lock) {
+					lock.notify();
+				}
+			}
+		});
+		eventInfo="";
 	}
 
 	public void selectAction(Player p,ArrayList<Cards> cards){
