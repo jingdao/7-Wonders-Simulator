@@ -1,7 +1,6 @@
 package model;
 
 import java.util.ArrayList;
-import java.io.Console;
 import view.CardView;
 import controller.Controller;
 import java.util.HashMap;
@@ -61,64 +60,9 @@ public class Player {
 		canBuildWonder=checkWonder();
 		action = PlayerAction.CARD;
 		int cardPlayed = -1;
-		if (id==0&&Controller.manualSimulation) {
-			view.displayCards(cards,playableCost);
-			view.displayResources(this);
-			view.selectAction(this,cards);
-		} else {
-//			if (canBuildWonder) {
-//				action=PlayerAction.WONDER;
-//				cardPlayed=0;
-//				if (wonderOptions!=null) {
-//					int minLeft=50,minRight=50;
-//					for (int j:wonderOptions) {
-//						if (j/100+j%100<minLeft+minRight) {
-//							minLeft=j/100;
-//							minRight=j%100;
-//						}
-//					}
-//					leftCost=minLeft;
-//					rightCost=minRight;
-//				}
-//				lastCard = cards.remove(cardPlayed);
-//				return;
-//			}
-			for (int i=0;i<cards.size();i++) {
-				if (hasFreeBuild>0&&playableCost[i]!=-2) {hasFreeBuild=0;cardPlayed=i;break;}
-				else if (playableCost[i]==0) {cardPlayed=i; break;}
-				else if (playableCost[i]>0) {
-					ArrayList<Integer> a = resourceOptions.get(i);
-					for (int j:a) {
-						if ((j/100+j%100)==playableCost[i]) {
-							leftCost=j/100;
-							rightCost=j%100;
-							break;
-						}
-					}
-					cardPlayed=i;
-					break;
-				}
-			}
-			if (cardPlayed==-1) {
-				cardPlayed=0;
-				if (canBuildWonder) {
-					action=PlayerAction.WONDER;
-					if (wonderOptions!=null) {
-						int minLeft=50,minRight=50;
-						for (int j:wonderOptions) {
-							if (j/100+j%100<minLeft+minRight) {
-								minLeft=j/100;
-								minRight=j%100;
-							}
-						}
-						leftCost=minLeft;
-						rightCost=minRight;
-					}
-				} else
-					action=PlayerAction.COIN;
-			}
-			lastCard = cards.remove(cardPlayed);
-		};
+		view.displayCards(cards,playableCost);
+		view.displayResources(this);
+		view.selectAction(this,cards);
 	}
 
 	public void checkResources(ArrayList<Cards> cards) {

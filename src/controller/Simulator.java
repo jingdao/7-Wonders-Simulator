@@ -9,7 +9,7 @@ public class Simulator {
 	public Simulator() {
 		Controller.manualSimulation=false;
 		con = new Controller(null);
-		simulateRandomForceWonder(10000);
+		simulateRandomForceWonder(100);
 	}
 
 	public void simulateRandom(int numSimulations) {

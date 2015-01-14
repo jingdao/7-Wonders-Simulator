@@ -5,6 +5,7 @@ import model.CardType;
 import model.Wonder;
 import model.Player;
 import model.PlayerAction;
+import model.Bot;
 import model.WonderStage;
 import model.ResourceType;
 import model.NeighborResource;
@@ -32,30 +33,6 @@ public class Controller {
 		if (manualSimulation) {
 			if (cv==null) com = new CommandLine(true);
 			newGame(defaultNumPlayers);
-//			Player p1 = new Player(1,Wonder.Rhodes,com);
-//			int[] d = {5};
-//			p1.addNeighborResource(d,true,true);
-//			int[] g = {5};
-//			p1.addNeighborResource(g,false,true);
-//			p1.addDualResource(c);
-//			for (Integer j:p1.resourceMap.keySet()) {
-//				String s="";
-//				int ii=j;
-//				for (int i=0;i<7;i++) {
-//					s+=(ii%5)+",";
-//					ii=ii/5;
-//				}
-//				System.out.print(s+":");
-//				if (p1.resourceMap.get(j)!=null) {
-//					for (NeighborResource n:p1.resourceMap.get(j)) {
-//						System.out.print(n.leftRaw+""+n.leftManufactured+""+n.rightRaw+""+n.rightManufactured+":"+NeighborResource.getStringFromResourceCode(n.prerequisite)+":"+n.id+",");
-//					}
-//				}
-//				System.out.println();
-//			}
-//			for (Integer j:NeighborResource.getCost(15,2,2,2,p1.resourceMap,new HashSet<Integer>())) {
-//				System.out.println((j/100)+" "+(j%100));
-//			}
 		} else if (cv==null) com = new CommandLine(false);
 
 	}
@@ -67,7 +44,9 @@ public class Controller {
 		lastPlayers=p;
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
-		for (int i=0;i<numPlayers;i++) p[i]=new Player(i,w[i],com);
+		if (manualSimulation) p[0]=new Player(0,w[0],com);
+		else p[0]=new Bot(0,w[0],com);
+		for (int i=1;i<numPlayers;i++) p[i]=new Bot(i,w[i],com);
 		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
 		for (int i=0;i<numPlayers-1;i++) {p[i].left=p[i+1]; p[i+1].right=p[i];}
 		for (Player pp:p) {
@@ -285,7 +264,7 @@ public class Controller {
 				else if (c.name=="WORKERS GUILD") {
 					guildScore[i]+=p[i].left.numBrown+p[i].right.numBrown;
 				} else if (c.name=="CRAFTMENS GUILD") {
-					guildScore[i]+=p[i].left.numGray+p[i].right.numGray;
+					guildScore[i]+=(p[i].left.numGray+p[i].right.numGray)*2;
 				} else if (c.name=="TRADERS GUILD") {
 					guildScore[i]+=p[i].left.numYellow+p[i].right.numYellow;
 				} else if (c.name=="PHILOSOPHERS GUILD") {

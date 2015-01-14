@@ -536,10 +536,11 @@ public class SevenWonders extends Activity implements CardView {
 		backButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
 				for (View v:descriptionIcons) v.setVisibility(View.GONE);
-				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
-				for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
+//				for (View v:resourceIcons) v.setVisibility(View.VISIBLE);
+//				for (View v:dualResourceIcons) v.setVisibility(View.VISIBLE);
 				for (int i=0;i<cards.size()*2;i++) cardViews.get(i).setVisibility(View.VISIBLE);
 				al.removeView(cardDescription);
+				displayResources(p);
 			}
 		});
 		al.addView(backButton);
@@ -646,9 +647,9 @@ public class SevenWonders extends Activity implements CardView {
 
 	public void displayScore(Player[] p,ArrayList<Integer> winner,ArrayList<Integer> totalScore,int[][] scoreCategories) {
 		String s = "Score:\n";
-		s+=" | BR GY Y  BL GN R  P  | V  D \n";
+		s+=" | BR GY  Y BL GN  R  P | V  D \n";
 		for (Player pp:p) {
-			s+=String.format("%1d| %2d %2d %2d %2d %2d %2d %2d| %2d %2d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
+			s+=String.format("%1d| %2d %2d %2d %2d %2d %2d %2d | %2d %2d\n",pp.id,pp.numBrown,pp.numGray,pp.numYellow,pp.numBlue,pp.numGreen,pp.numRed,pp.numPurple,pp.victoryToken,pp.defeatToken);
 		}
 		s+=" |Mil Cn Won Civ Sci Com Gld|Sum\n";
 		for (int i=0;i<p.length;i++) {
@@ -897,7 +898,9 @@ public class SevenWonders extends Activity implements CardView {
 					.setCancelable(false)
 					.setItems(labels, new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
-								p.playedCards.add(options.get(id));
+								Cards c = options.get(id);
+								p.playedCards.add(c);
+								p.applyCardEffect(c);
 								synchronized(lock) {
 									lock.notify();
 								}
@@ -1041,14 +1044,14 @@ public class SevenWonders extends Activity implements CardView {
 	@Override
 	public void onBackPressed() {
 		if (radioIcons.getVisibility()==View.VISIBLE) {
+			radioIcons.setVisibility(View.GONE);
 			for (View v:previousIcons) v.setVisibility(View.VISIBLE);
 			for (View v:neighborCardViews) v.setVisibility(View.GONE);
 			for (View v:neighborDualResourceIcons) v.setVisibility(View.GONE);
-			if (cardDescriptionText.getVisibility()==View.VISIBLE||messageText.getVisibility()==View.VISIBLE)
-				for (View v:resourceIcons)
-					v.setVisibility(View.GONE);
-			radioIcons.setVisibility(View.GONE);
-			displayResources(p);
+			if (cardDescriptionText.getVisibility()==View.VISIBLE||messageText.getVisibility()==View.VISIBLE) {
+				for (View v:resourceIcons) v.setVisibility(View.GONE);
+				for (View v:dualResourceIcons) v.setVisibility(View.GONE);
+			} else displayResources(p);
 		} else if (wonderDescription.getVisibility()==View.VISIBLE) {
 			for (View v:previousIcons) v.setVisibility(View.VISIBLE);
 			wonderDescription.setVisibility(View.GONE);
