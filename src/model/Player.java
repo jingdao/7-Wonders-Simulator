@@ -48,11 +48,11 @@ public class Player {
 			case LOOM: numLoom++; break;
 			case PAPYRUS: numPapyrus++; break;
 		}
-		if (id==0&&Controller.manualSimulation) {
-			view.selectWonderSide(this);
-		} else {
-			isWonderBSide=Controller.random.nextInt(2)==0;
-		}
+		selectWonderSide();
+	}
+
+	public void selectWonderSide() {
+		view.selectWonderSide(this);
 	}
 
 	public void getAction(ArrayList<Cards> cards) {
@@ -326,14 +326,10 @@ public class Player {
 		ArrayList<Cards> guildChoices = new ArrayList<Cards>();
 		for (Cards c:left.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
 		for (Cards c:right.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
-		if (id==0&&Controller.manualSimulation) {
-			if (guildChoices.size()==0) {
-				view.message("There are no neighbouring guilds to copy");
-				return;
-			} else view.selectGuild(this,guildChoices);
-		} else {
-			if (guildChoices.size()>0) playedCards.add(guildChoices.get(0));
-		}
+		if (guildChoices.size()==0) {
+			view.message("There are no neighbouring guilds to copy");
+			return;
+		} else view.selectGuild(this,guildChoices);
 	}
 
 	public void playFromDiscard(ArrayList<Cards> discardPile) {
@@ -345,23 +341,10 @@ public class Player {
 			else if (selected.contains(c)) selection.add(null);
 			else {selection.add(c); selected.add(c);}
 		}
-		if (id==0&&Controller.manualSimulation) {
-			if (selected.size()==0) {
-				view.message("There are no playable cards from the discard pile");
-				return;
-			} else view.selectFromDiscard(this,discardPile,selection);
-		} else {
-			if (selected.size()>0) {
-				for (int i=0;i<discardPile.size();i++){
-					if (selection.get(i)!=null) {
-						Cards c = discardPile.remove(i);
-						playedCards.add(c);
-						applyCardEffect(c);
-						break;
-					}
-				}
-			}
-		}
+		if (selected.size()==0) {
+			view.message("There are no playable cards from the discard pile");
+			return;
+		} else view.selectFromDiscard(this,discardPile,selection);
 	}
 
 	public void countCards() {

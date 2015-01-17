@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import view.CardView;
+import java.util.HashSet;
 import controller.Controller;
 
 public class Bot extends Player {
@@ -10,6 +11,10 @@ public class Bot extends Player {
 
 	public Bot(int id,Wonder w,CardView v) {
 		super(id,w,v);
+	}
+
+	public void selectWonderSide() {
+		isWonderBSide=Controller.random.nextInt(2)==0;
 	}
 
 	public void getAction(ArrayList<Cards> cards) {
@@ -69,5 +74,33 @@ public class Bot extends Player {
 				action=PlayerAction.COIN;
 		}
 		lastCard = cards.remove(cardPlayed);
+	}
+	
+	public void copyGuild() {
+		ArrayList<Cards> guildChoices = new ArrayList<Cards>();
+		for (Cards c:left.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
+		for (Cards c:right.playedCards) if (c.type==CardType.PURPLE) guildChoices.add(c);
+		if (guildChoices.size()>0) playedCards.add(guildChoices.get(0));
+	}
+
+	public void playFromDiscard(ArrayList<Cards> discardPile) {
+		canPlayFromDiscard=false;
+		ArrayList<Cards> selection = new ArrayList<Cards>();
+		HashSet<Cards> selected = new HashSet<Cards>();
+		for (Cards c:discardPile) {
+			if (playedCards.contains(c)) selection.add(null);
+			else if (selected.contains(c)) selection.add(null);
+			else {selection.add(c); selected.add(c);}
+		}
+		if (selected.size()>0) {
+			for (int i=0;i<discardPile.size();i++){
+				if (selection.get(i)!=null) {
+					Cards c = discardPile.remove(i);
+					playedCards.add(c);
+					applyCardEffect(c);
+					break;
+				}
+			}
+		}
 	}
 }
