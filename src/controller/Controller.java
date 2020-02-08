@@ -22,7 +22,7 @@ public class Controller {
 	public CardView com;
 	public static boolean manualSimulation=true;
 	public static int defaultNumPlayers=7;
-	public static String defaultWonder;
+	public static String defaultWonder = "ALEXANDRIA";
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 	public Player[] lastPlayers;
@@ -44,7 +44,10 @@ public class Controller {
 		lastPlayers=p;
 		ArrayList<Cards> discardPile = new ArrayList<Cards>();
 		shuffleWonders(w);
-		if (manualSimulation) p[0]=new Player(0,w[0],com);
+		if (manualSimulation) {
+			p[0]=new Player(0,w[0],com);
+			System.out.println("Player has "+w[0].name);
+		} 
 		else p[0]=new Bot(0,w[0],com);
 		for (int i=1;i<numPlayers;i++) p[i]=new Bot(i,w[i],com);
 		p[0].right=p[numPlayers-1]; p[numPlayers-1].left=p[0];
