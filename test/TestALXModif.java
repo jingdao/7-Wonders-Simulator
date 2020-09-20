@@ -1,7 +1,7 @@
-import controller.Simulator;
+import controller.ALXSimulator;
 
 class TestALXModif{
     public static void main(String[] args) {
-        Simulator sim = new Simulator();
+        ALXSimulator sim = new ALXSimulator();
     }
 }
