@@ -1,11 +1,9 @@
 package alx;
 
-import controller.Controller;
 import javafx.util.Pair;
 import model.*;
 import view.CardView;
 
-import javax.smartcardio.Card;
 import java.util.ArrayList;
 import java.util.HashSet;
 

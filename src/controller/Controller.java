@@ -1,6 +1,7 @@
 package controller;
 
 import alx.ALXController;
+import alx.ALXDefaultController;
 import alx.ALXPlayer;
 import model.Cards;
 import model.CardType;
@@ -10,13 +11,11 @@ import model.PlayerAction;
 import model.Bot;
 import model.WonderStage;
 import model.ResourceType;
-import model.NeighborResource;
 import view.CommandLine;
 import view.CardView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.HashSet;
 
 public class Controller {
 
