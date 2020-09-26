@@ -15,17 +15,32 @@ public class ALXOnePlayerController extends ALXController{
     private Action waitedAction;
     private Cards played;
     private ReentrantLock actionLock;
+    private boolean gameOver;
+    private boolean side;
+    private int playedTurns, totalTurn = 18;
     private ArrayList<Cards> hand;
+    private PlayerAction cardUsing;
+
+
+    public void setCardUsing(PlayerAction cardUsing) {
+        this.cardUsing = cardUsing;
+    }
 
     public Object getBell() {
         return bell;
     }
-
+    public ArrayList<Cards> getHand() {
+        return hand;
+    }
     public Action getWaitedAction() {
         actionLock.lock();
         Action a = waitedAction;
         actionLock.unlock();
         return a;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
     }
 
     public void setWaitedAction(Action a) {
@@ -43,11 +58,19 @@ public class ALXOnePlayerController extends ALXController{
     }
 
 
+    public void setSide(boolean side) {
+        this.side = side;
+    }
+
+
+
     public ALXOnePlayerController() {
         super();
         bell = new Object();
         actionLock = new ReentrantLock();
         waitedAction = Action.NONE;
+        gameOver = false;
+        playedTurns = 0;
     }
 
     public void registerSimPlayer(ALXPlayer player){
@@ -58,6 +81,10 @@ public class ALXOnePlayerController extends ALXController{
         actionLock.lock();
         waitedAction = Action.PLAY;
         this.hand = hand;
+        playedTurns ++;
+        if(playedTurns==totalTurn){
+            gameOver = true;
+        }
         actionLock.unlock();
         synchronized (bell){
             bell.notify();
@@ -70,7 +97,7 @@ public class ALXOnePlayerController extends ALXController{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return (new Pair(wonderName, played));
+        return (new Pair(cardUsing, played));
     }
 
     public void checkIfStarted(){
@@ -96,17 +123,105 @@ public class ALXOnePlayerController extends ALXController{
         System.out.println("started");
     }
 
+    public void playCard(Cards c){
+        setPlayed(c);
+        synchronized (bell){
+            bell.notify();
+        }
+        if(!gameOver){
+            synchronized (bell){
+                try {
+                    bell.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void playCard(Cards c, PlayerAction using){
+        setPlayed(c);
+        setCardUsing(using);
+        synchronized (bell){
+            bell.notify();
+        }
+        if(!gameOver){
+            synchronized (bell){
+                try {
+                    bell.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     public Boolean getWonderSide(Wonder w){
-        return defaultWonderSide();
+        actionLock.lock();
+        waitedAction = Action.WONDER_SIDE;
+        playedTurns ++;
+        if(playedTurns==totalTurn){
+            gameOver = true;
+        }
+        actionLock.unlock();
+        synchronized (bell){
+            bell.notify();
+        }
+
+        try {
+            synchronized (bell){
+                bell.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return side;
     }
 
     public Cards getCopyGuild(ArrayList<Cards> guildChoices){
-        return defaultCopyGuild(guildChoices);
+        actionLock.lock();
+        waitedAction = Action.COPY_GUILD;
+        this.hand = hand;
+        playedTurns ++;
+        if(playedTurns==totalTurn){
+            gameOver = true;
+        }
+        actionLock.unlock();
+        synchronized (bell){
+            bell.notify();
+        }
+
+        try {
+            synchronized (bell){
+                bell.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return played;
     }
 
     public Cards getPlayFromDiscard(ArrayList<Cards> playable){
-        return defaultPlayFromDiscard(playable);
+        actionLock.lock();
+        waitedAction = Action.DISCARD_PLAY;
+        this.hand = hand;
+        playedTurns ++;
+        if(playedTurns==totalTurn){
+            gameOver = true;
+        }
+        actionLock.unlock();
+        synchronized (bell){
+            bell.notify();
+        }
+
+        try {
+            synchronized (bell){
+                bell.wait();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return played;
     }
 
     public Pair<PlayerAction,Cards> defaultAction(Player p , ArrayList<Cards> cards) {
