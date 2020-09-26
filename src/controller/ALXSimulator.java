@@ -1,6 +1,7 @@
 package controller;
 
 import alx.ALXDefaultController;
+import alx.ALXOnePlayerController;
 import model.Wonder;
 
 public class ALXSimulator {
@@ -10,7 +11,6 @@ public class ALXSimulator {
 	public ALXSimulator() {
 		Controller.alxSimulation=true;
 		con = new Controller(null);
-		con.alxCon = new ALXDefaultController();
 		simulateRandomForceWonder(100);
 	}
 

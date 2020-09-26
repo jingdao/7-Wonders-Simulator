@@ -2,6 +2,7 @@ package controller;
 
 import alx.ALXController;
 import alx.ALXDefaultController;
+import alx.ALXOnePlayerController;
 import alx.ALXPlayer;
 import model.Cards;
 import model.CardType;
@@ -28,10 +29,11 @@ public class Controller {
 	public ArrayList<Integer> lastScore;
 	public ArrayList<Integer> lastWinner;
 	public Player[] lastPlayers;
-	public ALXController alxCon;
+	public ALXOnePlayerController alxCon;
 
 	public Controller(CardView cv) {
 		Cards.buildDependencyMap();
+		alxCon = new ALXOnePlayerController();
 		if (cv!=null) com=cv;
 		if (manualSimulation) {
 			if (cv==null) com = new CommandLine(true);
