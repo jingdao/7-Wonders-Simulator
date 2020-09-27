@@ -73,6 +73,7 @@ public class Bot extends Player {
 			} else
 				action=PlayerAction.COIN;
 		}
+		playedCard = cards.get(cardPlayed);
 		lastCard = cards.remove(cardPlayed);
 	}
 	

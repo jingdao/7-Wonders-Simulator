@@ -32,6 +32,7 @@ public class Player {
 	public boolean canCopyGuild=false;
 	public boolean canPlayLastCard=false;
 	public boolean canPlayFromDiscard=false;
+	public Cards playedCard;
 
 	public Player(int id,Wonder w,CardView v) {
 		this.id=id;
@@ -81,6 +82,7 @@ public class Player {
 		canBuildWonder=checkWonder();
 		action = PlayerAction.CARD;
 		int cardPlayed = -1;
+		playedCard = cards.get(cardPlayed);
 		view.displayCards(cards,playableCost);
 		view.displayResources(this);
 		view.selectAction(this,cards);

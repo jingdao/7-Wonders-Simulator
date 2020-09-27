@@ -23,4 +23,5 @@ public abstract class ALXController {
     public abstract Cards getCopyGuild(ArrayList<Cards> guildChoices);
 
     public abstract Cards getPlayFromDiscard(ArrayList<Cards> playable);
+
 }

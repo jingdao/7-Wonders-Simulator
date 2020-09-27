@@ -4,6 +4,7 @@ import alx.ALXController;
 import alx.ALXDefaultController;
 import alx.ALXOnePlayerController;
 import alx.ALXPlayer;
+import javafx.util.Pair;
 import model.Cards;
 import model.CardType;
 import model.Wonder;
@@ -16,6 +17,7 @@ import view.CommandLine;
 import view.CardView;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Random;
 
 public class Controller {
@@ -78,12 +80,21 @@ public class Controller {
 				if (p[j].hasFreeBuild==0) p[j].hasFreeBuild=1;
 			}
 			for (int j=0;j<6;j++) {
+				HashMap<String, Pair<PlayerAction, Cards>> plays = new  HashMap<String, Pair<PlayerAction, Cards>>();
 				com.displayTurn(j+1);
 				for(int k=0;k<numPlayers;k++) {
 					com.displayPlayerName(""+k);
-					if (age==1||age==3) p[k].getAction(cc[(j+numPlayers-k)%numPlayers]);
+					if (age==1||age==3){
+						p[k].getAction(cc[(j+numPlayers-k)%numPlayers]);
+					}
 					else p[k].getAction(cc[(k+j)%numPlayers]);
+					Cards kCard = null;
+					if(p[k].action==PlayerAction.CARD){
+						kCard = p[k].playedCard;
+					}
+					plays.put(p[k].wonder.name, new Pair<PlayerAction, Cards>(p[k].action, kCard));
 				}
+				alxCon.setPlays(plays);
 				for (Player pp:p) resolvePlayerOutcome(pp,discardPile);
 				if (j!=5) {
 					for (Player pp:p) {

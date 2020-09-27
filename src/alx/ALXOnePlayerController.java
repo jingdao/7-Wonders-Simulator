@@ -7,6 +7,7 @@ import model.PlayerAction;
 import model.Wonder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ALXOnePlayerController extends ALXController{
@@ -14,12 +15,14 @@ public class ALXOnePlayerController extends ALXController{
     private Object bell;
     private Action waitedAction;
     private Cards played;
-    private ReentrantLock actionLock;
+    private ReentrantLock actionLock, playsLock;
     private boolean gameOver;
     private boolean side;
     private int playedTurns, totalTurn = 18;
     private ArrayList<Cards> hand;
     private PlayerAction cardUsing;
+    HashMap<String, Pair<PlayerAction, Cards>> plays;
+    private boolean playsUpToDate;
 
 
     public void setCardUsing(PlayerAction cardUsing) {
@@ -68,9 +71,12 @@ public class ALXOnePlayerController extends ALXController{
         super();
         bell = new Object();
         actionLock = new ReentrantLock();
+        playsLock = new ReentrantLock();
+        playsUpToDate = false;
         waitedAction = Action.NONE;
         gameOver = false;
         playedTurns = 0;
+        plays = new HashMap<String, Pair<PlayerAction, Cards>>();
     }
 
     public void registerSimPlayer(ALXPlayer player){
@@ -102,7 +108,6 @@ public class ALXOnePlayerController extends ALXController{
 
     public void checkIfStarted(){
         boolean started = false;
-        System.out.println("checkStart");
         while (!started){
             actionLock.lock();
             if(waitedAction!=Action.NONE){
@@ -120,7 +125,6 @@ public class ALXOnePlayerController extends ALXController{
                 }
             }
         }
-        System.out.println("started");
     }
 
     public void playCard(Cards c){
@@ -305,4 +309,28 @@ public class ALXOnePlayerController extends ALXController{
     }
 
 
+    public HashMap<String, Pair<PlayerAction, Cards>> getPlays() {
+        synchronized (plays){
+            if(playsUpToDate){
+                playsUpToDate = false;
+                return plays;
+            }
+            else{
+                try {
+                    plays.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                playsUpToDate = false;
+                return plays;
+            }
+        }
+    }
+
+    public void setPlays(HashMap<String, Pair<PlayerAction, Cards>> plays) {
+        synchronized (plays){
+            playsUpToDate = true;
+            this.plays = plays;
+        }
+    }
 }

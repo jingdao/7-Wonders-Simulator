@@ -20,6 +20,7 @@ public class ALXPlayer extends Player {
         Pair<PlayerAction, Cards> play = alxControl.getSimPlayAction(wonder.name, cards);
         action = play.getKey();
         lastCard = play.getValue();
+        playedCard = lastCard;
     }
 
     public void selectWonderSide() {
